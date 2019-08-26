@@ -7,7 +7,7 @@ set -o pipefail
 ###
 # Define the name of the Lambda zip file being produced
 ###
-ZIP_FILE=assessment-data-import.zip
+ZIP_FILE=data-ingestion.zip
 
 ###
 # Set up the Python virtual environment

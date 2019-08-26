@@ -3,6 +3,6 @@ version: '3.2'
 services:
   build_assessment_data_import_lambda:
     build: .
-    image: 'dhsncats/build_assessment_data_import_lambda'
+    image: 'dhsncats/build_data_ingestion_lambda'
     volumes:
       - .:/output
