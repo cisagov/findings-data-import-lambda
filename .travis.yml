@@ -16,4 +16,4 @@ install:
 script:
   - pre-commit run --all-files
   - docker-compose up
-  - test -f assessment-data-import.zip
+  - test -f findings-data-import.zip

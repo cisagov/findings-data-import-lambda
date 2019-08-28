@@ -4,7 +4,7 @@ import logging
 import os
 
 # Local module
-from adi import data_etl_to_mongo as adi
+from adi import findings_data_import as adi
 
 # This Lambda function expects the following environment variables to be
 # defined:

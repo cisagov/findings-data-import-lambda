@@ -91,7 +91,7 @@
                 "--error-folder=error",
                 "--fields-filename=fields_to_replace.json"
             ],
-            "program": "${workspaceFolder}/adi/data_etl_to_mongo.py",
+            "program": "${workspaceFolder}/adi/findings_data_import.py",
             "console": "integratedTerminal"
         }
     ]

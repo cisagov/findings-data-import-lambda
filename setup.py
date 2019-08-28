@@ -1,5 +1,5 @@
 """
-This is the setup module for assessment data import.
+This is the setup module for findings data import.
 
 Based on:
 
@@ -54,5 +54,5 @@ setup(
     install_requires=["docopt"],
     extras_require={"test": ["pre-commit"]},
     # Conveniently allows one to run the CLI tool as `example`
-    entry_points={"console_scripts": ["adi = adi.data_etl_to_mongo:main"]},
+    entry_points={"console_scripts": ["adi = adi.findings_data_import:main"]},
 )

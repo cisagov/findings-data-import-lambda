@@ -1,5 +1,5 @@
 FROM lambci/lambda:build-python3.6
-MAINTAINER David Redmin <david.redmin@trio.dhs.gov>
+MAINTAINER Matthew Zackschewski <matthew.zackschewski@trio.dhs.gov>
 
 COPY build.sh .
 

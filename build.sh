@@ -7,7 +7,7 @@ set -o pipefail
 ###
 # Define the name of the Lambda zip file being produced
 ###
-ZIP_FILE=data-ingestion.zip
+ZIP_FILE=findings-data-import.zip
 
 ###
 # Set up the Python virtual environment
@@ -27,7 +27,7 @@ source $VENV_DIR/bin/activate
 pip install --upgrade pip setuptools
 
 ###
-# Install local assessment data import (adi) module
+# Install local findings data import (adi) module
 ###
 pip install -r requirements.txt
 
