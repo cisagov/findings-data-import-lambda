@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/mzack5020/findings-data-import.svg?branch=master)](https://travis-ci.org/mzack5020/findings-data-import.svg?branch=master)
 [![Total alerts](https://img.shields.io/github/issues/mzack5020/findings-data-import)](https://lgtm.com/projects/g/mzack5020/findings-data-import/alerts/)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/mzack5020/findings-data-import.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mzack5020/findings-data-import/context:python)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/mzack5020/findings-data-import.svg)](https://lgtm.com/projects/g/mzack5020/findings-data-import/context:python)
 
 `findings-data-import-lambda` contains code to build an AWS Lambda function
 that reads findings data from a JSON file in an S3 bucket and imports it
