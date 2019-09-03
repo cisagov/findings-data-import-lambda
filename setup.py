@@ -17,7 +17,7 @@ def readme():
 
 
 setup(
-    name="adi",
+    name="fdi",
     # Versions should comply with PEP440
     version="1.0.0",
     description="Ingest data to a Mongo database",
@@ -49,10 +49,10 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     # What does your project relate to?
-    keywords="adi ingest",
-    packages=["adi"],
+    keywords="fdi ingest",
+    packages=["fdi"],
     install_requires=["docopt"],
     extras_require={"test": ["pre-commit"]},
     # Conveniently allows one to run the CLI tool as `example`
-    entry_points={"console_scripts": ["adi = adi.findings_data_import:main"]},
+    entry_points={"console_scripts": ["fdi = fdi.findings_data_import:main"]},
 )

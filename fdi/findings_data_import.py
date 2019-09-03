@@ -50,7 +50,7 @@ import docopt
 from pymongo import MongoClient
 
 # Local library
-from adi import __version__
+from fdi import __version__
 
 def import_data(
     s3_bucket=None,

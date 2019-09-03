@@ -3,11 +3,11 @@ MAINTAINER Matthew Zackschewski <matthew.zackschewski@trio.dhs.gov>
 
 COPY build.sh .
 
-# Files needed to install local adi module
+# Files needed to install local fdi module
 COPY setup.py .
 COPY requirements.txt .
 COPY README.md .
-COPY adi ./adi
+COPY fdi ./fdi
 
 COPY lambda_handler.py .
 

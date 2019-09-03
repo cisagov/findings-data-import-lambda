@@ -27,7 +27,7 @@ source $VENV_DIR/bin/activate
 pip install --upgrade pip setuptools
 
 ###
-# Install local findings data import (adi) module
+# Install local findings data import (fdi) module
 ###
 pip install -r requirements.txt
 
@@ -54,11 +54,11 @@ BUILD_DIR=/build
 
 ###
 # Copy all packages, including any hidden dotfiles.  Also copy the
-# local adi package and the Lambda handler.
+# local fdi package and the Lambda handler.
 ###
 cp -rT $VENV_DIR/lib/python3.6/site-packages/ $BUILD_DIR
 cp -rT $VENV_DIR/lib64/python3.6/site-packages/ $BUILD_DIR
-cp -r adi $BUILD_DIR
+cp -r fdi $BUILD_DIR
 cp lambda_handler.py $BUILD_DIR
 
 ###

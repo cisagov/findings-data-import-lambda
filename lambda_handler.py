@@ -4,7 +4,7 @@ import logging
 import os
 
 # Local module
-from adi import findings_data_import as adi
+from fdi import findings_data_import as fdi
 
 # This Lambda function expects the following environment variables to be
 # defined:
@@ -73,7 +73,7 @@ def handler(event, context):
                 and filename.endswith(os.environ["ends_with"]))
         ):
             # Import the data
-            adi.import_data(
+            fdi.import_data(
                 s3_bucket=os.environ["s3_bucket"],
                 data_filename=filename,
                 db_hostname=os.environ["db_hostname"],
