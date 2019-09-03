@@ -1,7 +1,7 @@
 # findings-data-import-lambda ƛ #
 
-[![Build Status](https://travis-ci.com/mzack5020/findings-data-import.svg?branch=develop)](https://travis-ci.com/mzack5020/findings-data-import)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/mzack5020/findings-data-import.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mzack5020/findings-data-import/alerts/)
+[![Build Status](https://travis-ci.org/mzack5020/findings-data-import.svg?branch=master)](https://travis-ci.org/mzack5020/findings-data-import.svg?branch=master)
+[![Total alerts](https://img.shields.io/github/issues/mzack5020/findings-data-import)](https://lgtm.com/projects/g/mzack5020/findings-data-import/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/mzack5020/findings-data-import.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mzack5020/findings-data-import/context:python)
 
 `findings-data-import-lambda` contains code to build an AWS Lambda function
