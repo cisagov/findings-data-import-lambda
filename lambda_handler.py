@@ -66,11 +66,10 @@ def handler(event, context):
     if record["eventName"] == "ObjectCreated:Put":
         # Verify event originated from correct bucket and key
         # Uses environment variables for filename validation
-        if (
-            record["s3"]["bucket"]["name"] == os.environ["s3_bucket"]
-            and (os.environ["contains"] in filename
-                and filename.startswith(os.environ["starts_with"])
-                and filename.endswith(os.environ["ends_with"]))
+        if record["s3"]["bucket"]["name"] == os.environ["s3_bucket"] and (
+            os.environ["contains"] in filename
+            and filename.startswith(os.environ["starts_with"])
+            and filename.endswith(os.environ["ends_with"])
         ):
             # Import the data
             fdi.import_data(
@@ -81,14 +80,20 @@ def handler(event, context):
                 fields_filename=os.environ["fields_filename"],
                 log_level=log_level,
                 error_folder=os.environ["error_folder"],
-                success_folder=os.environ["success_folder"]
+                success_folder=os.environ["success_folder"],
             )
-        elif (not filename.startswith(os.environ["starts_with"])):
-            logging.warning(f"Filename {filename} failed validation, did not start with {os.environ['starts_with']}")
-        elif (os.environ["contains"] not in filename):
-            logging.warning(f"Filename {filename} failed validation, did not contain {os.environ['contains']}")
-        elif (not filename.endswith(os.environ["ends_with"])):
-            logging.warning(f"Filename {filename} failed validation, did not end with {os.environ['ends_with']}")
+        elif not filename.startswith(os.environ["starts_with"]):
+            logging.warning(
+                f"Filename {filename} failed validation, did not start with {os.environ['starts_with']}"
+            )
+        elif os.environ["contains"] not in filename:
+            logging.warning(
+                f"Filename {filename} failed validation, did not contain {os.environ['contains']}"
+            )
+        elif not filename.endswith(os.environ["ends_with"]):
+            logging.warning(
+                f"Filename {filename} failed validation, did not end with {os.environ['ends_with']}"
+            )
         else:
             logging.warning(
                 "Expected ObjectCreated event from S3 bucket "

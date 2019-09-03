@@ -1,8 +1,8 @@
 # findings-data-import-lambda ƛ #
 
-<!-- [![Build Status](https://travis-ci.com/cisagov/findings-data-import-lambda.svg?branch=develop)](https://travis-ci.com/cisagov/findings-data-import-lambda) -->
-<!-- [![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/alerts/) -->
-<!-- [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/context:python) -->
+[![Build Status](https://travis-ci.com/cisagov/findings-data-import-lambda.svg?branch=develop)](https://travis-ci.com/cisagov/findings-data-import-lambda)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/context:python)
 
 `findings-data-import-lambda` contains code to build an AWS Lambda function
 that reads findings data from a JSON file in an S3 bucket and imports it
@@ -16,6 +16,16 @@ Building the AWS Lambda zip file:
 1. `docker-compose down`
 1. `docker-compose build`
 1. `docker-compose up`
+
+## Fields to Replace ##
+
+The fields_to_replace.json file is leveraged to dynamically tell the script
+which fields to remove and/or change. As the input JSON structure changes, the
+script is capable of adapting to new or changing field name requirements. In
+the JSON file, it follows a key/value methodology, where the key is the
+original field name to find in the input JSON and the value is the new field
+name desired. If the value is blank, the script will remove that JSON element
+from the record.
 
 ## Note ##
 
