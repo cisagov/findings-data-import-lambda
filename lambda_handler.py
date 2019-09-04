@@ -27,6 +27,13 @@ from fdi import findings_data_import as fdi
 # processed files will be located after the script runs.
 # 10. error_folder - The directory name of the folder where unsuccessfully
 # processed files will be located after the script runs.
+# 11. ssm_db_name - The name of the parameter in AWS SSM that holds the name
+# of the database to store the assessment data in.
+# 12. ssm_db_user - The name of the parameter in AWS SSM that holds the
+# database username with write permission to the assessment database.
+# 13. ssm_db_password - The name of the parameter in AWS SSM that holds the
+# database password for the user with write permission to the assessment
+# database.
 
 # In the case of AWS Lambda, the root logger is used BEFORE our Lambda handler
 # runs, and this creates a default handler that goes to the console.  Once
@@ -81,6 +88,9 @@ def handler(event, context):
                 log_level=log_level,
                 error_folder=os.environ["error_folder"],
                 success_folder=os.environ["success_folder"],
+                ssm_db_name=os.environ["ssm_db_name"],
+                ssm_db_user=os.environ["ssm_db_user"],
+                ssm_db_password=os.environ["ssm_db_password"],
             )
         elif not filename.startswith(os.environ["starts_with"]):
             logging.warning(

@@ -6,7 +6,7 @@ The source data is a JSON file stored in an AWS S3 bucket.
 The destination of the data is a Mongo database.
 
 Usage:
-  findings_data_import --s3-bucket=BUCKET --data-filename=FILE --db-hostname=HOST --starts-with=STARTS --contains=CONTAINS --ends-with=ENDS --success-folder=SUCCESS --error-folder=ERROR [--fields-filename=FILENAME] [--db-port=PORT] [--log-level=LEVEL]
+  findings_data_import --s3-bucket=BUCKET --data-filename=FILE --db-hostname=HOST --starts-with=STARTS --contains=CONTAINS --ends-with=ENDS --success-folder=SUCCESS --error-folder=ERROR [--fields-filename=FILENAME] [--db-port=PORT] [--log-level=LEVEL] --ssm-db-name=DB --ssm-db-user=USER --ssm-db-password=PASSWORD
   findings_data_import (-h | --help)
 
 Options:
@@ -34,6 +34,15 @@ Options:
                               the specified value.  Valid values are "debug",
                               "info", "warning", "error", and "critical".
                               [default: warning]
+  --ssm-db-name=DB            The name of the parameter in AWS SSM that holds
+                              the name of the database to store the assessment
+                              data in.
+  --ssm-db-user=USER          The name of the parameter in AWS SSM that holds
+                              the database username with write permission to
+                              the assessment database.
+  --ssm-db-password=PASSWORD  The name of the parameter in AWS SSM that holds
+                              the database password for the user with write
+                              permission to the assessment database.
 """
 
 # Standard libraries
@@ -42,6 +51,7 @@ import json
 import logging
 import os
 import tempfile
+import urllib
 
 # Third-party libraries (install with pip)
 from boto3 import client as boto3_client
@@ -62,6 +72,9 @@ def import_data(
     log_level="warning",
     error_folder="error",
     success_folder="success",
+    ssm_db_name=None,
+    ssm_db_user=None,
+    ssm_db_password=None,
 ):
     """Ingest data from a JSON file in an S3 bucket to a database.
 
@@ -106,6 +119,18 @@ def import_data(
         Valid values are "debug", "info", "warning", "error", and "critical".
         [default: warning]
 
+    ssm_db_name : str
+        The name of the parameter in AWS SSM that holds the name of the
+        database to store the assessment data in.
+
+    ssm_db_user : str
+        The name of the parameter in AWS SSM that holds the database username
+        with write permission to the assessment database.
+
+    ssm_db_password : str
+        The name of the parameter in AWS SSM that holds the database password
+        for the user with write permission to the assessment database.
+
     Returns
     -------
     bool : Returns a boolean indicating if the data import was
@@ -114,6 +139,7 @@ def import_data(
     """
     # Boto3 clients for S3 and SSM
     s3_client = boto3_client("s3")
+    ssm_client = boto3_client("ssm")
 
     # Securely create a temporary file to store the JSON data in
     temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
@@ -151,14 +177,33 @@ def import_data(
 
         logging.info(f"JSON data loaded from {data_filename} and {fields_filename}")
 
+        # Fetch database credentials from AWS SSM
+        db_info = dict()
+        for ssm_param_name, key in (
+            (ssm_db_name, "db_name"),
+            (ssm_db_user, "username"),
+            (ssm_db_password, "password"),
+        ):
+            response = ssm_client.get_parameter(
+                Name=ssm_param_name, WithDecryption=True
+            )
+            db_info[key] = response["Parameter"]["Value"]
+
+        # Set up database connection
+        credPw = urllib.parse.quote(db_info["password"])
+        db_uri = (
+            f"mongodb://{db_info['username']}:{credPw}@"
+            f"{db_hostname}:{db_port}/{db_info['db_name']}"
+        )
+
         # Connect to MongoDB with timeout so Lambda doesn't run over
         db_connection = MongoClient(
-            host=f"mongodb://{db_hostname}:{db_port}",
-            serverSelectionTimeoutMS=2500,
-            tz_aware=True,
+            host=db_uri, serverSelectionTimeoutMS=2500, tz_aware=True
         )
-        db = db_connection["test-db"]
-        logging.info(f"DB connection set up to {db_hostname}:{db_port}/test-db")
+        db = db_connection[db_info["db_name"]]
+        logging.info(
+            f"DB connection set up to {db_hostname}:{db_port}/" f"{db_info['db_name']}"
+        )
 
         # Grab Unique Collection Field Names
         unique_collection_fields = set()
@@ -293,6 +338,9 @@ def main():
         args["--log-level"],
         args["--error-folder"],
         args["--success-folder"],
+        args["--ssm-db-name"],
+        args["--ssm-db-user"],
+        args["--ssm-db-password"],
     )
 
     # Stop logging and clean up
