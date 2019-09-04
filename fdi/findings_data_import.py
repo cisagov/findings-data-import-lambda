@@ -150,21 +150,19 @@ def import_data(
 
         # Fetch findings data file from S3 bucket
         s3_client.download_file(
-            Bucket=s3_bucket, Key=data_filename, Filename=f"{temp_data_filepath}"
+            Bucket=s3_bucket, Key=data_filename, Filename=temp_data_filepath
         )
 
         # Fetch fields file from S3 bucket
         logging.info(f"Retrieving {fields_filename}...")
         s3_client.download_file(
-            Bucket=s3_bucket,
-            Key=fields_filename,
-            Filename=f"{temp_field_data_filepath}",
+            Bucket=s3_bucket, Key=fields_filename, Filename=temp_field_data_filepath
         )
         logging.info(f"Retrieved {data_filename} from S3 bucket {s3_bucket}")
 
         # Load data JSON
-        with open(f"{temp_data_filepath}") as data_json_file, open(
-            f"{temp_field_data_filepath}"
+        with open(temp_data_filepath) as data_json_file, open(
+            temp_field_data_filepath
         ) as fields_json_file:
             json_data = json.load(data_json_file)
             replacement_fields = json.load(fields_json_file)
@@ -254,14 +252,7 @@ def import_data(
 
         # Create success folders depending on how processing went
         copySource = s3_bucket + "/" + data_filename
-        key = (
-            success_folder
-            + "/"
-            + data_filename.replace(".json", "")
-            + "_"
-            + str(datetime.datetime.now())
-            + ".json"
-        )
+        key = f"{success_folder}/{data_filename.replace('.json', '')}_{str(datetime.datetime.now())}.json"
 
         # Move data object to success directory
         s3_client.copy_object(Bucket=s3_bucket, CopySource=copySource, Key=key)
@@ -274,14 +265,7 @@ def import_data(
 
         # Create error folders depending on how processing went
         copySource = s3_bucket + "/" + data_filename
-        key = (
-            error_folder
-            + "/"
-            + data_filename.replace(".json", "")
-            + "_"
-            + str(datetime.datetime.now())
-            + ".json"
-        )
+        key = f"{success_folder}/{data_filename.replace('.json', '')}_{str(datetime.datetime.now())}.json"
 
         # Move data object to error directory
         s3_client.copy_object(Bucket=s3_bucket, CopySource=copySource, Key=key)
@@ -296,8 +280,8 @@ def import_data(
     finally:
         # Delete local temp data file(s) regardless of whether or not
         # any exceptions were thrown in the try block above
-        os.remove(f"{temp_data_filepath}")
-        os.remove(f"{temp_field_data_filepath}")
+        os.remove(temp_data_filepath)
+        os.remove(temp_field_data_filepath)
         logging.info(
             f"Deleted temporary {data_filename} and {temp_field_data_filepath} from local filesystem"
         )
