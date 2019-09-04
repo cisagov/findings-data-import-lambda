@@ -1,6 +1,6 @@
 # findings-data-import-lambda ƛ #
 
-[![Build Status](https://travis-ci.org/mzack5020/findings-data-import.svg?branch=master)](https://travis-ci.org/mzack5020/findings-data-import.svg?branch=master)
+[![Build Status](https://travis-ci.org/cisagov/findings-data-import.svg?branch=master)](https://travis-ci.org/cisagov/findings-data-import.svg?branch=master)
 [![Total alerts](https://img.shields.io/lgtm/alerts/github/mzack5020/findings-data-import)](https://img.shields.io/lgtm/alerts/github/mzack5020/findings-data-import)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/github/mzack5020/findings-data-import)](https://img.shields.io/lgtm/grade/python/github/mzack5020/findings-data-import)
 
