@@ -6,7 +6,7 @@ The source data is a JSON file stored in an AWS S3 bucket.
 The destination of the data is a Mongo database.
 
 Usage:
-  findings_data_import --s3-bucket=BUCKET --data-filename=FILE --db-hostname=HOST --starts-with=STARTS --contains=CONTAINS --ends-with=ENDS --success-folder=SUCCESS --error-folder=ERROR [--fields-filename=FILENAME] [--db-port=PORT] [--log-level=LEVEL] --ssm-db-name=DB --ssm-db-user=USER --ssm-db-password=PASSWORD
+  findings_data_import --s3-bucket=BUCKET --data-filename=FILE --db-hostname=HOST --success-folder=SUCCESS --error-folder=ERROR [--fields-filename=FILENAME] [--db-port=PORT] [--log-level=LEVEL] --ssm-db-name=DB --ssm-db-user=USER --ssm-db-password=PASSWORD
   findings_data_import (-h | --help)
 
 Options:
@@ -20,12 +20,6 @@ Options:
   --db-port=PORT              The port that the database server is
                               listening on. [default: 27017]
   --fields-filename=FILENAME  Filename storing replaced/removed fieldnames
-  --starts-with=STARTS        Expression used for validating the beginning of
-                              the findings data filename
-  --contains=CONTAINS         Expression used for validating the contents of
-                              the findings data filename
-  --ends-with=ENDS            Expression used for validating the end of
-                              the findings data filename
   --success-folder=SUCCESS    The directory name used for storing successfully
                               processed files
   --error-folder=ERROR        The directory name used for storing unsuccessfully
