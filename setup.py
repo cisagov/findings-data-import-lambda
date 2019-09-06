@@ -26,7 +26,7 @@ setup(
     # NCATS "homepage"
     url="https://www.us-cert.gov/resources/ncats",
     # The project's main homepage
-    download_url="https://github.com/mzack5020/mongo-migration-script",
+    download_url="https://github.com/cisagov/findings-data-import-lambda",
     # Author details
     author="Cyber and Infrastructure Security Agency",
     author_email="ncats@hq.dhs.gov",
