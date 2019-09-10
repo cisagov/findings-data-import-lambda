@@ -1,6 +1,6 @@
 # findings-data-import-lambda ƛ #
 
-[![Build Status](https://travis-ci.org/cisagov/findings-data-import-lambda.svg?branch=master)](https://travis-ci.org/cisagov/findings-data-import-lambda.svg?branch=master)
+[![Build Status](https://travis-ci.org/cisagov/findings-data-import-lambda.svg?branch=develop)](https://travis-ci.org/cisagov/findings-data-import-lambda.svg?branch=develop)
 [![Total alerts](https://img.shields.io/lgtm/alerts/github/cisagov/findings-data-import-lambda)](https://img.shields.io/lgtm/alerts/github/cisagov/findings-data-import-lambda)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/github/cisagov/findings-data-import-lambda)](https://img.shields.io/lgtm/grade/python/github/cisagov/findings-data-import-lambda)
 
