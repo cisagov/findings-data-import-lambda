@@ -12,10 +12,12 @@ into a database.
 
 Building the AWS Lambda zip file:
 
-1. `cd ~/cisagov/findings-data-import-lambda`
-1. `docker-compose down`
-1. `docker-compose build`
-1. `docker-compose up`
+```console
+cd ~/cisagov/findings-data-import-lambda
+docker-compose down
+docker-compose build
+docker-compose up
+```
 
 ## Fields to Replace ##
 
