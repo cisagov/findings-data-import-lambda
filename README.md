@@ -21,7 +21,7 @@ docker-compose up
 
 ## Fields to Replace ##
 
-The fields_to_replace.json file is leveraged to dynamically tell the script
+The `fields_to_replace.json` file is leveraged to dynamically tell the script
 which fields to remove and/or change. As the input JSON structure changes, the
 script is capable of adapting to new or changing field name requirements. In
 the JSON file, it follows a key/value methodology, where the key is the
@@ -39,7 +39,7 @@ using this tool.
 
 ## License ##
 
-This project is in the worldwide [public domain](LICENSE.md).
+This project is in the worldwide [public domain](LICENSE).
 
 This project is in the public domain within the United States, and
 copyright and related rights in the work worldwide are waived through
