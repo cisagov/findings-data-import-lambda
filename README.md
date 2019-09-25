@@ -21,13 +21,24 @@ docker-compose up
 
 ## Fields to Replace ##
 
-The `fields_to_replace.json` file is leveraged to dynamically tell the script
+The `--fields-filename` flag is leveraged to dynamically tell the script
 which fields to remove and/or change. As the input JSON structure changes, the
 script is capable of adapting to new or changing field name requirements. In
 the JSON file, it follows a key/value methodology, where the key is the
-original field name to find in the input JSON and the value is the new field
-name desired. If the value is blank, the script will remove that JSON element
-from the record.
+original field name (designated by the "field_to_replace" field in the example
+below) to find in the input JSON and the value (designated by the
+"value_to_replace_field_with" field in the example below) is the new field name
+desired. If the value is blank, the script will remove that JSON element from
+the record.
+
+### Example JSON Fields to Replace File ###
+
+```json
+{
+    "field_to_replace": "value_to_replace_field_with",
+    "field_to_remove": ""
+}
+```
 
 ## Note ##
 
