@@ -40,10 +40,12 @@ Options:
 """
 
 # Standard libraries
+import copy
 import datetime
 import json
 import logging
 import os
+import re
 import tempfile
 import urllib
 
@@ -226,6 +228,29 @@ def import_data(
                     )
                     valid = False
                     break
+
+            # Validate and Correct RV Number (if needed)
+            # Skips record if RV number is invalid
+            # Validation Rules:
+            # - First two letters begin with 'RV'
+            # - Ends with four or more digits
+            #   * If more than four numbers are present,
+            #     it will attempt to read the rest of the
+            #     characters as numbers and remove
+            #     unnecessary zeros. This will validate
+            #     text values with multiple leading zeros.
+            correctedRv = copy.deepcopy(item["RVA ID"])
+            if correctedRv:
+                isValid = re.search(r"RV\\d{4,0}", correctedRv)
+                if isValid:
+                    matchedRv = isValid.group()
+                    matchedRvNumber = matchedRv.replace("RV", "")
+                    if matchedRvNumber.isnumeric():
+                        item["RVA ID"] = "{:04d}".format(int(matchedRvNumber))
+                else:
+                    rvaId = item["RVA ID"]
+                    logging.warn(f"Invalid RV Number '{rvaId}' was found!")
+                    raise Exception(f"Invalid RV Number '{rvaId}' was found!")
 
             # De-dup (RVA ID and NCATS ID and severity) - Skip duplicate records
             if (
