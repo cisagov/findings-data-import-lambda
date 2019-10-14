@@ -161,9 +161,7 @@ def import_data(
         valid_fields_list = json.loads(valid_fields_object.get("Body", ()))
         field_map_dict = json.loads(field_map_object.get("Body", {}))
 
-        logging.info(
-            f"Configuration data loaded from {valid_fields}" f" and {field_map}"
-        )
+        logging.info(f"Configuration data loaded from {valid_fields} and {field_map}")
 
         # Load data JSON
         with open(temp_data_filepath) as data_json_file:
@@ -196,7 +194,7 @@ def import_data(
         )
         db = db_connection[db_info["db_name"]]
         logging.info(
-            f"DB connection set up to {db_hostname}:{db_port}/" f"{db_info['db_name']}"
+            f"DB connection set up to {db_hostname}:{db_port}/{db_info['db_name']}"
         )
 
         # Iterate through data and save each record to the database

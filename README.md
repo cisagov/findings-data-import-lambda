@@ -19,19 +19,35 @@ docker-compose build
 docker-compose up
 ```
 
-## Fields to Replace ##
+## Valid Fields ##
 
-The `--fields-filename` flag is leveraged to dynamically tell the script
-which fields to remove and/or change. As the input JSON structure changes, the
-script is capable of adapting to new or changing field name requirements. In
-the JSON file, it follows a key/value methodology, where the key is the
-original field name (designated by the "field_to_replace" field in the example
-below) to find in the input JSON and the value (designated by the
-"value_to_replace_field_with" field in the example below) is the new field name
-desired. If the value is blank, the script will remove that JSON element from
-the record.
+The `--valid-fields` flag is used to tell the script which fields are allowed in
+data that is being imported into the database. This file is a list of valid
+field names in JSON format. If a finding being imported contains a field not in
+this list then it will be skipped.
 
-### Example JSON Fields to Replace File ###
+## Example Valid Fields JSON File ##
+
+```json
+(
+  "Finding Name",
+  "Finding Description",
+  "Date Found"
+)
+```
+
+## Field Mapping ##
+
+The `--field-map` flag is leveraged to dynamically tell the script which fields
+to remove and/or change. As the input JSON structure changes, the script is
+capable of adapting to new or changing field name requirements. In the JSON
+file it follows a key/value methodology, where the key is the original field
+name (designated by the "field_to_replace" field in the example below) to find
+in the input JSON and the value (designated by the "value_to_replace_field_with"
+field in the example below) is the new field name desired. If the value is
+blank, the script will remove that JSON element from the record.
+
+### Example Field Map JSON File ###
 
 ```json
 {
