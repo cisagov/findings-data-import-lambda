@@ -158,9 +158,12 @@ def import_data(
         field_map_object = s3_client.get_object(Bucket=s3_bucket, Key=field_map)
 
         # Load valid_fields and field_map JSONs
-        valid_fields_list = json.loads(valid_fields_object.get("Body", ()))
-        field_map_dict = json.loads(field_map_object.get("Body", {}))
-
+        valid_fields_list = json.loads(
+            valid_fields_object.get("Body", "()").read().decode("utf-8")
+        )
+        field_map_dict = json.loads(
+            field_map_object.get("Body", "{}").read().decode("utf-8")
+        )
         logging.info(f"Configuration data loaded from {valid_fields} and {field_map}")
 
         # Load data JSON
@@ -264,7 +267,7 @@ def import_data(
                 f"name {SUCCEEDED_FOLDER}"
             )
     except Exception as err:
-        logging.warning(f"Error Message: {err}")
+        logging.warning(f"Error Message {type(err)}: {err}")
 
         if save_failed:
             # Create failure folders depending on how processing went

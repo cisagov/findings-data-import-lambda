@@ -74,8 +74,12 @@ def handler(event, context):
                 db_port=os.environ["db_port"],
                 valid_fields=os.environ["valid_fields"],
                 field_map=os.environ["field_map"],
-                save_failed=os.environ["save_failed"],
-                save_succeeded=os.environ["save_succeeded"],
+                save_failed=True
+                if os.environ["save_failed"].lower() == "true"
+                else False,
+                save_succeeded=True
+                if os.environ["save_succeeded"].lower() == "true"
+                else False,
                 ssm_db_name=os.environ["ssm_db_name"],
                 ssm_db_user=os.environ["ssm_db_user"],
                 ssm_db_password=os.environ["ssm_db_password"],
