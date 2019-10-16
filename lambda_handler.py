@@ -72,7 +72,6 @@ def handler(event, context):
                 data_filename=record["s3"]["object"]["key"],
                 db_hostname=os.environ["db_hostname"],
                 db_port=os.environ["db_port"],
-                valid_fields=os.environ["valid_fields"],
                 field_map=os.environ["field_map"],
                 save_failed=True
                 if os.environ["save_failed"].lower() == "true"
