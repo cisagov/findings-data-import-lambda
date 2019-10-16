@@ -6,7 +6,7 @@ The source data is a JSON file stored in an AWS S3 bucket.
 The destination of the data is a Mongo database.
 
 Usage:
-  findings_data_import --s3-bucket=BUCKET --data-filename=FILE --db-hostname=HOST --valid-fields=VALID --field-map=MAP --ssm-db-name=DB --ssm-db-user=USER --ssm-db-password=PASSWORD [--save-failed=FAILED] [--save-succeeded=SUCCEEDED] [--db-port=PORT] [--log-level=LEVEL]
+  findings_data_import --s3-bucket=BUCKET --data-filename=FILE --db-hostname=HOST --field-map=MAP --ssm-db-name=DB --ssm-db-user=USER --ssm-db-password=PASSWORD [--save-failed=FAILED] [--save-succeeded=SUCCEEDED] [--db-port=PORT] [--log-level=LEVEL]
   findings_data_import (-h | --help)
 
 Options:
@@ -19,8 +19,6 @@ Options:
                               the data in.
   --db-port=PORT              The port that the database server is
                               listening on. [default: 27017]
-  --valid-fields=VALID        The S3 key for the JSON file containing a list of
-                              valid fields for a findings document.
   --field-map=MAP             The S3 key for the JSON file containing a map of
                               incoming field names to what they should be for
                               the database.
@@ -69,7 +67,6 @@ def import_data(
     data_filename=None,
     db_hostname=None,
     db_port="27017",
-    valid_fields=None,
     field_map=None,
     save_failed=True,
     save_succeeded=False,
@@ -94,10 +91,6 @@ def import_data(
 
     db_port : str
         The port that the database server is listening on. [default: 27017]
-
-    valid_fields : str
-        The S3 key for the JSON file containing a list of valid fields for a
-        findings document.
 
     field_map : str
         The S3 key for the JSON file containing a map of incoming field names
@@ -151,20 +144,14 @@ def import_data(
             Bucket=s3_bucket, Key=data_filename, Filename=temp_data_filepath
         )
 
-        # Fetch object for the valid_fields JSON
-        valid_fields_object = s3_client.get_object(Bucket=s3_bucket, Key=valid_fields)
-
         # Fetch object for the field_map JSON
         field_map_object = s3_client.get_object(Bucket=s3_bucket, Key=field_map)
 
-        # Load valid_fields and field_map JSONs
-        valid_fields_list = json.loads(
-            valid_fields_object.get("Body", "()").read().decode("utf-8")
-        )
+        # Load field_map JSONs
         field_map_dict = json.loads(
             field_map_object.get("Body", "{}").read().decode("utf-8")
         )
-        logging.info(f"Configuration data loaded from {valid_fields} and {field_map}")
+        logging.info(f"Configuration data loaded from {field_map}")
 
         # Load data JSON
         with open(temp_data_filepath) as data_json_file:
@@ -212,37 +199,24 @@ def import_data(
             # Grab RVA ID from filename
             finding["RVA ID"] = rvaId
 
-            # Remove JSON objects that have fieldnames that don't exist in the collection
-            valid = True
-            for key in finding.keys():
-                if key not in valid_fields_list:
-                    logging.info(
-                        f"Object fieldname {key} not recognized, skipping record: {finding}..."
-                    )
-                    valid = False
-                    break
-
             # De-dupe (RVA ID and NCATS ID and severity) - Skip duplicate records
             if (
                 "RVA ID" in finding.keys()
                 and "NCATS ID" in finding.keys()
-                and "Severity" in finding.keys()
             ):
-                results = db.findings.find_one(
+                # If the finding already exists, update it with new data.
+                result = db.findings.find_one_and_update(
                     {
                         "RVA ID": rvaId,
                         "NCATS ID": finding["NCATS ID"],
                         "Severity": finding["Severity"],
-                    }
+                    },
+                    finding
                 )
 
-            if results:
-                logging.warning("Duplicate record found.")
-                logging.warning(f"Full Record: {finding}")
-                logging.warning("Skipping record...")
-
-            if valid and not results:
-                db.findings.insert_one(finding)
+                # If it does not exist it is a new finding so we insert instead.
+                if not result:
+                    db.findings.insert_one(finding)
 
         logging.info(f"{len(findings_data)} documents successfully processed")
 
@@ -323,7 +297,6 @@ def main():
         args["--data-filename"],
         args["--db-hostname"],
         args["--db-port"],
-        args["--valid-fields"],
         args["--field-map"],
         args["--save-failed"],
         args["--save-succeeded"],
