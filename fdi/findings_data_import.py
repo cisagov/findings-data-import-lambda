@@ -187,6 +187,7 @@ def import_data(
             f"DB connection set up to {db_hostname}:{db_port}/{db_info['db_name']}"
         )
 
+        processed_findings = 0
         # Iterate through data and save each record to the database
         for finding in findings_data:
             # Replace or rename fields from replacement file
@@ -196,29 +197,28 @@ def import_data(
                         finding[field_map_dict[field]] = finding[field]
                     finding.pop(field, None)
 
-            # Grab RVA ID from filename
-            finding["RVA ID"] = rvaId
-
-            # De-dupe (RVA ID and NCATS ID and severity) - Skip duplicate records
-            if (
-                "RVA ID" in finding.keys()
-                and "NCATS ID" in finding.keys()
-            ):
+            # Only process appropriate findings records.
+            if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
+                finding["RVA ID"] = rvaId
                 # If the finding already exists, update it with new data.
                 result = db.findings.find_one_and_update(
                     {
-                        "RVA ID": rvaId,
+                        "RVA ID": finding["RVA ID"],
                         "NCATS ID": finding["NCATS ID"],
                         "Severity": finding["Severity"],
                     },
-                    finding
+                    finding,
                 )
 
                 # If it does not exist it is a new finding so we insert instead.
                 if not result:
                     db.findings.insert_one(finding)
 
-        logging.info(f"{len(findings_data)} documents successfully processed")
+                processed_findings += 1
+
+        logging.info(
+            f"{processed_findings}/{len(findings_data)} documents successfully processed"
+        )
 
         if save_succeeded:
             # Create success folders depending on how processing went
