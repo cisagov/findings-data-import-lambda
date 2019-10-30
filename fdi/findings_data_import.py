@@ -200,19 +200,18 @@ def import_data(
             # Only process appropriate findings records.
             if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
                 finding["RVA ID"] = rvaId
+
                 # If the finding already exists, update it with new data.
-                result = db.findings.find_one_and_update(
+                # Otherwise insert it as a new document (upsert=True).
+                db.findings.find_one_and_update(
                     {
                         "RVA ID": finding["RVA ID"],
                         "NCATS ID": finding["NCATS ID"],
                         "Severity": finding["Severity"],
                     },
-                    finding,
+                    {"$set": finding},
+                    upsert=True,
                 )
-
-                # If it does not exist it is a new finding so we insert instead.
-                if not result:
-                    db.findings.insert_one(finding)
 
                 processed_findings += 1
 
