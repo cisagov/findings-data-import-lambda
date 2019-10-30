@@ -24,7 +24,7 @@ Options:
                               the database.
   --save-failed=FAILED        The directory name used for storing unsuccessfully
                               processed files. [default: True]
-  --save-succesded=SUCCEEDED  The directory name used for storing successfully
+  --save-succeeded=SUCCEEDED  The directory name used for storing successfully
                               processed files. [default: False]
   --ssm-db-name=DB            The name of the parameter in AWS SSM that holds
                               the name of the database to store the assessment
@@ -42,7 +42,7 @@ Options:
 """
 
 # Standard libraries
-import datetime
+from datetime import datetime
 import json
 import logging
 import os
@@ -152,6 +152,7 @@ def import_data(
             field_map_object.get("Body", "{}").read().decode("utf-8")
         )
         logging.info(f"Configuration data loaded from {field_map}")
+        logging.debug(f"Configuration data: {field_map_dict}")
 
         # Load data JSON
         with open(temp_data_filepath) as data_json_file:
@@ -222,7 +223,7 @@ def import_data(
         if save_succeeded:
             # Create success folders depending on how processing went
             succeeded_filename = data_filename.replace(
-                ".json", f"_{str(datetime.datetime.now())}.json"
+                ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
             )
             key = f"{SUCCEEDED_FOLDER}/{succeeded_filename}"
 
@@ -237,15 +238,15 @@ def import_data(
 
             logging.info(
                 f"Moved {data_filename} to the success directory under folder "
-                f"name {SUCCEEDED_FOLDER}"
+                f"name {SUCCEEDED_FOLDER} as {succeeded_filename}"
             )
     except Exception as err:
-        logging.warning(f"Error Message {type(err)}: {err}")
+        logging.error(f"Error Message {type(err)}: {err}")
 
         if save_failed:
             # Create failure folders depending on how processing went
             failed_filename = data_filename.replace(
-                ".json", f"_{str(datetime.datetime.now())}.json"
+                ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
             )
             key = f"{FAILED_FOLDER}/{failed_filename}"
 
@@ -258,11 +259,11 @@ def import_data(
             try:
                 s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
             except ClientError as delete_error:
-                logging.info(f"Error deleting file with error: {delete_error}")
+                logging.error(f"Error deleting file with error: {delete_error}")
 
-            logging.info(
+            logging.error(
                 f"Error occurred. Moved {data_filename} to the failed directory"
-                f" under folder name {FAILED_FOLDER}"
+                f" under folder name {FAILED_FOLDER} as {failed_filename}"
             )
     finally:
         # Delete local temp data file(s) regardless of whether or not
