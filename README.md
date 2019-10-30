@@ -19,23 +19,6 @@ docker-compose build
 docker-compose up
 ```
 
-## Valid Fields ##
-
-The `--valid-fields` flag is used to tell the script which fields are allowed in
-data that is being imported into the database. This file is a list of valid
-field names in JSON format. If a finding being imported contains a field not in
-this list then it will be skipped.
-
-## Example Valid Fields JSON File ##
-
-```json
-(
-  "Finding Name",
-  "Finding Description",
-  "Date Found"
-)
-```
-
 ## Field Mapping ##
 
 The `--field-map` flag is leveraged to dynamically tell the script which fields
