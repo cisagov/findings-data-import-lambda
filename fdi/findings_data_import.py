@@ -133,7 +133,8 @@ def import_data(
     temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
 
     try:
-        # Extract RV ID from filename
+        # Extract RV ID from filename. The filename is expected to be in the format:
+        # <RVA ID>_<any optional information>assessment_data.json
         logging.info(f"Extracting RVA ID from filename for {data_filename}")
         rvaId = data_filename.split("_")[0]
 
