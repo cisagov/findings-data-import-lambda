@@ -213,16 +213,15 @@ def import_data(
             #     text values with multiple leading zeros.
             correctedRv = copy.deepcopy(finding["RVA ID"])
             if correctedRv:
-                isValid = re.search(r"RV\\d{4,0}", correctedRv)
+                isValid = re.search(r"RV\d{4,}", correctedRv)
                 if isValid:
                     matchedRv = isValid.group()
                     matchedRvNumber = matchedRv.replace("RV", "")
                     if matchedRvNumber.isnumeric():
-                        finding["RVA ID"] = "{:04d}".format(int(matchedRvNumber))
+                        finding["RVA ID"] = "RV{:04d}".format(int(matchedRvNumber))
                 else:
-                    rvaId = finding["RVA ID"]
-                    logging.warn(f"Invalid RV Number '{rvaId}' was found!")
-                    raise Exception(f"Invalid RV Number '{rvaId}' was found!")
+                    logging.warn(f"Invalid RV Number '{correctedRv}' was found!")
+                    raise Exception(f"Invalid RV Number '{correctedRv}' was found!")
 
             # Only process appropriate findings records.
             if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
