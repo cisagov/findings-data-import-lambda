@@ -204,7 +204,7 @@ def import_data(
             # Validate and Correct RV Number (if needed)
             # Skips record if RV number is invalid
             # Validation Rules:
-            # - First two letters begin with "RV"
+            # - First two letters begin with 'RV'
             # - Ends with four or more digits
             #   * If more than four numbers are present,
             #     it will attempt to read the rest of the
