@@ -196,17 +196,22 @@ def import_data(
                     finding.pop(field, None)
 
             # Get RVA ID from last 4 digits
+            rvaIdSuccess = True
             rvaId = re.search(r"\d{4}$", finding["RVA ID"])
             if rvaId:
                 finding["RVA ID"] = "RV" + rvaId.group(0)
             else:
-                rvaId = finding["RVA ID"]
-                raise Exception(
-                    f"Error retrieving RVA ID. ID provided {rvaId} could not be parsed."
+                rvaIdSuccess = False
+                logging.error(
+                    f"Error retrieving RVA ID. ID provided {finding['RVA ID']} could not be parsed. Skipping record..."
                 )
 
             # Only process appropriate findings records.
-            if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
+            if (
+                "RVA ID" in finding.keys()
+                and "NCATS ID" in finding.keys()
+                and rvaIdSuccess
+            ):
                 # If the finding already exists, update it with new data.
                 # Otherwise insert it as a new document (upsert=True).
                 db.findings.find_one_and_update(
