@@ -43,7 +43,6 @@ Options:
 
 # Standard libraries
 from datetime import datetime
-import copy
 import json
 import logging
 import os
@@ -135,11 +134,6 @@ def import_data(
     temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
 
     try:
-        # Extract RV ID from filename. The filename is expected to be in the format:
-        # <RVA ID>_<any optional information>assessment_data.json
-        logging.info(f"Extracting RVA ID from filename for {data_filename}")
-        rvaId = data_filename.split("_")[0]
-
         logging.info(f"Retrieving {data_filename}...")
 
         # Fetch findings data file from S3 bucket
@@ -201,32 +195,18 @@ def import_data(
                         finding[field_map_dict[field]] = finding[field]
                     finding.pop(field, None)
 
-            # Validate and Correct RV Number (if needed)
-            # Skips record if RV number is invalid
-            # Validation Rules:
-            # - First two letters begin with "RV"
-            # - Ends with four or more digits
-            #   * If more than four numbers are present,
-            #     it will attempt to read the rest of the
-            #     characters as numbers and remove
-            #     unnecessary zeros. This will validate
-            #     text values with multiple leading zeros.
-            correctedRv = copy.deepcopy(finding["RVA ID"])
-            if correctedRv:
-                isValid = re.search(r"RV\d{4,}", correctedRv)
-                if isValid:
-                    matchedRv = isValid.group()
-                    matchedRvNumber = matchedRv.replace("RV", "")
-                    if matchedRvNumber.isnumeric():
-                        finding["RVA ID"] = "RV{:04d}".format(int(matchedRvNumber))
-                else:
-                    logging.warn(f"Invalid RV Number '{correctedRv}' was found!")
-                    raise Exception(f"Invalid RV Number '{correctedRv}' was found!")
+            # Get RVA ID from last 4 digits
+            rvaId = re.search(r"\d{4}$", finding["RVA ID"])
+            if rvaId:
+                finding["RVA ID"] = "RV" + rvaId.group(0)
+            else:
+                rvaId = finding["RVA ID"]
+                raise Exception(
+                    f"Error retrieving RVA ID. ID provided {rvaId} could not be parsed."
+                )
 
             # Only process appropriate findings records.
             if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
-                finding["RVA ID"] = rvaId
-
                 # If the finding already exists, update it with new data.
                 # Otherwise insert it as a new document (upsert=True).
                 db.findings.find_one_and_update(
