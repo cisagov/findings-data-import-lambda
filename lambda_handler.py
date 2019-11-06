@@ -9,31 +9,22 @@ from fdi import findings_data_import as fdi
 # This Lambda function expects the following environment variables to be
 # defined:
 # 1. s3_bucket - The AWS S3 bucket containing the data file
-# 2. data_filename - The name of the file containing the data in
-# the S3 bucket above
+# 2. data_filename - The key of the file containing the data in
+#    the S3 bucket above
 # 3. db_hostname - The hostname that has the database to store the
-# data in
+#    data in
 # 4. db_port - The port that the database server is listening on
-# 5. fields_filename - Filename in S3 where the replacement/removed fieldnames
-# are stored. This file should map old fieldname spellings to new fieldname
-# spellings. (i.e. {"old_value": "new_value"})
-# 6. starts_with - The expression that should located at the beginning of
-# the filename.
-# 7. contains - The expression that should be located somewhere within the
-# filename.
-# 8. ends_with - The expression that should be located at the end of the
-# filename.
-# 9. success_folder - The directory name of the folder where successfully
-# processed files will be located after the script runs.
-# 10. error_folder - The directory name of the folder where unsuccessfully
-# processed files will be located after the script runs.
-# 11. ssm_db_name - The name of the parameter in AWS SSM that holds the name
-# of the database to store the assessment data in.
-# 12. ssm_db_user - The name of the parameter in AWS SSM that holds the
-# database username with write permission to the assessment database.
-# 13. ssm_db_password - The name of the parameter in AWS SSM that holds the
-# database password for the user with write permission to the assessment
-# database.
+# 5. save_error - A boolean value specifying if inputs that error should be
+#    retained.
+# 6. save_success - A boolean value specifying if inputs that succeed should be
+#    retained.
+# 7. ssm_db_name - The name of the parameter in AWS SSM that holds the name
+#    of the database to store the assessment data in.
+# 8. ssm_db_user - The name of the parameter in AWS SSM that holds the
+#    database username with write permission to the assessment database.
+# 9. ssm_db_password - The name of the parameter in AWS SSM that holds the
+#    database password for the user with write permission to the assessment
+#    database.
 
 # In the case of AWS Lambda, the root logger is used BEFORE our Lambda handler
 # runs, and this creates a default handler that goes to the console.  Once
@@ -61,7 +52,7 @@ if root.handlers:
 
 def handler(event, context):
     """Handle all Lambda events."""
-    logging.debug("AWS Event was: {}".format(event))
+    logging.debug(f"AWS Event was: {event}")
 
     # Get info in the S3 event notification message from
     # the parent Lambda function.
@@ -72,48 +63,42 @@ def handler(event, context):
     # Verify event has correct eventName
     if record["eventName"] == "ObjectCreated:Put":
         # Verify event originated from correct bucket and key
-        # Uses environment variables for filename validation
-        if record["s3"]["bucket"]["name"] == os.environ["s3_bucket"] and (
-            os.environ["contains"] in filename
-            and filename.startswith(os.environ["starts_with"])
-            and filename.endswith(os.environ["ends_with"])
-        ):
+        if record["s3"]["bucket"]["name"] == os.environ["s3_bucket"] and record["s3"][
+            "object"
+        ]["key"].endswith(os.environ["file_suffix"]):
             # Import the data
             fdi.import_data(
                 s3_bucket=os.environ["s3_bucket"],
-                data_filename=filename,
+                data_filename=record["s3"]["object"]["key"],
                 db_hostname=os.environ["db_hostname"],
                 db_port=os.environ["db_port"],
-                fields_filename=os.environ["fields_filename"],
-                log_level=log_level,
-                error_folder=os.environ["error_folder"],
-                success_folder=os.environ["success_folder"],
+                field_map=os.environ["field_map"],
+                save_failed=True
+                if os.environ["save_failed"].lower() == "true"
+                else False,
+                save_succeeded=True
+                if os.environ["save_succeeded"].lower() == "true"
+                else False,
                 ssm_db_name=os.environ["ssm_db_name"],
                 ssm_db_user=os.environ["ssm_db_user"],
                 ssm_db_password=os.environ["ssm_db_password"],
+                log_level=log_level,
             )
-        elif not filename.startswith(os.environ["starts_with"]):
+        elif not filename.endswith(os.environ["file_suffix"]):
             logging.warning(
-                f"Filename {filename} failed validation, did not start with {os.environ['starts_with']}"
-            )
-        elif os.environ["contains"] not in filename:
-            logging.warning(
-                f"Filename {filename} failed validation, did not contain {os.environ['contains']}"
-            )
-        elif not filename.endswith(os.environ["ends_with"]):
-            logging.warning(
-                f"Filename {filename} failed validation, did not end with {os.environ['ends_with']}"
+                f'Filename "{filename}" failed validation, '
+                f"did not end with {os.environ['file_suffix']}"
             )
         else:
             logging.warning(
-                "Expected ObjectCreated event from S3 bucket "
+                "Expected ObjectCreated:Put event from S3 bucket "
                 f"{os.environ['s3_bucket']} "
                 f"with key {os.environ['data_filename']}, but "
                 "received event from S3 bucket "
                 f"{record['s3']['bucket']['name']} with key "
                 f"{record['s3']['object']['key']}"
             )
-            logging.warning("Full AWS event: {}".format(event))
+            logging.warning(f"Full AWS event: {event}")
     else:
-        logging.warning("Unexpected eventName received: {}".format(record["eventName"]))
-        logging.warning("Full AWS event: {}".format(event))
+        logging.warning(f"Unexpected eventName received: {record['eventName']}")
+        logging.warning(f"Full AWS event: {event}")

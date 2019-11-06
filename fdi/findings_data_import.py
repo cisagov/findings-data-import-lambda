@@ -6,7 +6,7 @@ The source data is a JSON file stored in an AWS S3 bucket.
 The destination of the data is a Mongo database.
 
 Usage:
-  findings_data_import --s3-bucket=BUCKET --data-filename=FILE --db-hostname=HOST --success-folder=SUCCESS --error-folder=ERROR [--fields-filename=FILENAME] [--db-port=PORT] [--log-level=LEVEL] --ssm-db-name=DB --ssm-db-user=USER --ssm-db-password=PASSWORD
+  findings_data_import --s3-bucket=BUCKET --data-filename=FILE --db-hostname=HOST --field-map=MAP --ssm-db-name=DB --ssm-db-user=USER --ssm-db-password=PASSWORD [--save-failed=FAILED] [--save-succeeded=SUCCEEDED] [--db-port=PORT] [--log-level=LEVEL]
   findings_data_import (-h | --help)
 
 Options:
@@ -19,15 +19,13 @@ Options:
                               the data in.
   --db-port=PORT              The port that the database server is
                               listening on. [default: 27017]
-  --fields-filename=FILENAME  Filename storing replaced/removed fieldnames
-  --success-folder=SUCCESS    The directory name used for storing successfully
-                              processed files
-  --error-folder=ERROR        The directory name used for storing unsuccessfully
-                              processed files
-  --log-level=LEVEL           If specified, then the log level will be set to
-                              the specified value.  Valid values are "debug",
-                              "info", "warning", "error", and "critical".
-                              [default: warning]
+  --field-map=MAP             The S3 key for the JSON file containing a map of
+                              incoming field names to what they should be for
+                              the database.
+  --save-failed=FAILED        The directory name used for storing unsuccessfully
+                              processed files. [default: True]
+  --save-succeeded=SUCCEEDED  The directory name used for storing successfully
+                              processed files. [default: False]
   --ssm-db-name=DB            The name of the parameter in AWS SSM that holds
                               the name of the database to store the assessment
                               data in.
@@ -37,11 +35,15 @@ Options:
   --ssm-db-password=PASSWORD  The name of the parameter in AWS SSM that holds
                               the database password for the user with write
                               permission to the assessment database.
+  --log-level=LEVEL           If specified, then the log level will be set to
+                              the specified value.  Valid values are "debug",
+                              "info", "warning", "error", and "critical".
+                              [default: warning]
 """
 
 # Standard libraries
+from datetime import datetime
 import copy
-import datetime
 import json
 import logging
 import os
@@ -58,19 +60,22 @@ from pymongo import MongoClient
 # Local library
 from fdi import __version__
 
+SUCCEEDED_FOLDER = "success"
+FAILED_FOLDER = "failed"
+
 
 def import_data(
     s3_bucket=None,
     data_filename=None,
     db_hostname=None,
     db_port="27017",
-    fields_filename=None,
-    log_level="warning",
-    error_folder="error",
-    success_folder="success",
+    field_map=None,
+    save_failed=True,
+    save_succeeded=False,
     ssm_db_name=None,
     ssm_db_user=None,
     ssm_db_password=None,
+    log_level="warning",
 ):
     """Ingest data from a JSON file in an S3 bucket to a database.
 
@@ -89,31 +94,15 @@ def import_data(
     db_port : str
         The port that the database server is listening on. [default: 27017]
 
-    fields_filename : str
-        The filename storing the field names that need to be removed or
-        need their spelling changed
+    field_map : str
+        The S3 key for the JSON file containing a map of incoming field names
+        to what they should be for the database.
 
-    starts_with : str
-        The expression that will be validated against the start of the file
+    save_failed : bool
+        Whether or not we should store unsuccessfully processed files
 
-    contains : str
-        The expression that will be validated against the contents of the file
-
-    ends_with : str
-        The expression that will be validated against the end of the file
-
-    success_folder : str
-        The success directory name that will be used to store successfully
-        processed files
-
-    error_folder : str
-        The error directory name that will be used to store unsuccessfully
-        processed files
-
-    log_level : str
-        If specified, then the log level will be set to the specified value.
-        Valid values are "debug", "info", "warning", "error", and "critical".
-        [default: warning]
+    save_succeeded : bool
+        Whether or not we should store successfully processed files
 
     ssm_db_name : str
         The name of the parameter in AWS SSM that holds the name of the
@@ -126,6 +115,11 @@ def import_data(
     ssm_db_password : str
         The name of the parameter in AWS SSM that holds the database password
         for the user with write permission to the assessment database.
+
+    log_level : str
+        If specified, then the log level will be set to the specified value.
+        Valid values are "debug", "info", "warning", "error", and "critical".
+        [default: warning]
 
     Returns
     -------
@@ -140,11 +134,9 @@ def import_data(
     # Securely create a temporary file to store the JSON data in
     temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
 
-    # Securely create a temporary file to store the fields to edit/remove in
-    temp_field_file_descriptor, temp_field_data_filepath = tempfile.mkstemp()
-
     try:
-        # Extract RV ID from filename
+        # Extract RV ID from filename. The filename is expected to be in the format:
+        # <RVA ID>_<any optional information>assessment_data.json
         logging.info(f"Extracting RVA ID from filename for {data_filename}")
         rvaId = data_filename.split("_")[0]
 
@@ -155,21 +147,21 @@ def import_data(
             Bucket=s3_bucket, Key=data_filename, Filename=temp_data_filepath
         )
 
-        # Fetch fields file from S3 bucket
-        logging.info(f"Retrieving {fields_filename}...")
-        s3_client.download_file(
-            Bucket=s3_bucket, Key=fields_filename, Filename=temp_field_data_filepath
+        # Fetch object for the field_map JSON
+        field_map_object = s3_client.get_object(Bucket=s3_bucket, Key=field_map)
+
+        # Load field_map JSONs
+        field_map_dict = json.loads(
+            field_map_object.get("Body", "{}").read().decode("utf-8")
         )
-        logging.info(f"Retrieved {data_filename} from S3 bucket {s3_bucket}")
+        logging.info(f"Configuration data loaded from {field_map}")
+        logging.debug(f"Configuration data: {field_map_dict}")
 
         # Load data JSON
-        with open(temp_data_filepath) as data_json_file, open(
-            temp_field_data_filepath
-        ) as fields_json_file:
-            json_data = json.load(data_json_file)
-            replacement_fields = json.load(fields_json_file)
+        with open(temp_data_filepath) as data_json_file:
+            findings_data = json.load(data_json_file)
 
-        logging.info(f"JSON data loaded from {data_filename} and {fields_filename}")
+        logging.info(f"JSON data loaded from {data_filename}.")
 
         # Fetch database credentials from AWS SSM
         db_info = dict()
@@ -196,38 +188,18 @@ def import_data(
         )
         db = db_connection[db_info["db_name"]]
         logging.info(
-            f"DB connection set up to {db_hostname}:{db_port}/" f"{db_info['db_name']}"
+            f"DB connection set up to {db_hostname}:{db_port}/{db_info['db_name']}"
         )
 
-        # Grab Unique Collection Field Names
-        unique_collection_fields = set()
-        records = db.testTable.find()
-        for record in records:
-            for field in record.keys():
-                unique_collection_fields.add(field)
-
+        processed_findings = 0
         # Iterate through data and save each record to the database
-        for item in json_data:
-
+        for finding in findings_data:
             # Replace or rename fields from replacement file
-            for field in replacement_fields:
-                if field in item.keys():
-                    if replacement_fields[field]:
-                        item[replacement_fields[field]] = item[field]
-                    item.pop(field, None)
-
-            # Grab RVA ID from filename
-            item["RVA ID"] = rvaId
-
-            # Remove JSON objects that have fieldnames that don't exist in the collection
-            valid = True
-            for key in item.keys():
-                if key not in unique_collection_fields:
-                    logging.info(
-                        f"Object fieldname {key} not recognized, skipping record: {item}..."
-                    )
-                    valid = False
-                    break
+            for field in field_map_dict:
+                if field in finding.keys():
+                    if field_map_dict[field]:
+                        finding[field_map_dict[field]] = finding[field]
+                    finding.pop(field, None)
 
             # Validate and Correct RV Number (if needed)
             # Skips record if RV number is invalid
@@ -239,77 +211,91 @@ def import_data(
             #     characters as numbers and remove
             #     unnecessary zeros. This will validate
             #     text values with multiple leading zeros.
-            correctedRv = copy.deepcopy(item["RVA ID"])
+            correctedRv = copy.deepcopy(finding["RVA ID"])
             if correctedRv:
                 isValid = re.search(r"RV\\d{4,0}", correctedRv)
                 if isValid:
                     matchedRv = isValid.group()
                     matchedRvNumber = matchedRv.replace("RV", "")
                     if matchedRvNumber.isnumeric():
-                        item["RVA ID"] = "{:04d}".format(int(matchedRvNumber))
+                        finding["RVA ID"] = "{:04d}".format(int(matchedRvNumber))
                 else:
-                    rvaId = item["RVA ID"]
+                    rvaId = finding["RVA ID"]
                     logging.warn(f"Invalid RV Number '{rvaId}' was found!")
                     raise Exception(f"Invalid RV Number '{rvaId}' was found!")
 
-            # De-dup (RVA ID and NCATS ID and severity) - Skip duplicate records
-            if (
-                "RVA ID" in item.keys()
-                and "NCATS ID" in item.keys()
-                and "Severity" in item.keys()
-            ):
-                results = db.testTable.find_one(
+            # Only process appropriate findings records.
+            if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
+                finding["RVA ID"] = rvaId
+
+                # If the finding already exists, update it with new data.
+                # Otherwise insert it as a new document (upsert=True).
+                db.findings.find_one_and_update(
                     {
-                        "RVA ID": rvaId,
-                        "NCATS ID": item["NCATS ID"],
-                        "Severity": item["Severity"],
-                    }
+                        "RVA ID": finding["RVA ID"],
+                        "NCATS ID": finding["NCATS ID"],
+                        "Severity": finding["Severity"],
+                    },
+                    {"$set": finding},
+                    upsert=True,
                 )
-                if results:
-                    logging.warning("Duplicate record found.")
-                    logging.warning(f"Full Record: {item}")
-                    logging.warning("Skipping record...")
 
-                if valid and not results:
-                    db.testTable.insert_one(item)
+                processed_findings += 1
 
-        logging.info(f"{len(json_data)} documents " "successfully processed")
-
-        # Create success folders depending on how processing went
-        copySource = s3_bucket + "/" + data_filename
-        key = f"{success_folder}/{data_filename.replace('.json', '')}_{str(datetime.datetime.now())}.json"
-
-        # Move data object to success directory
-        s3_client.copy_object(Bucket=s3_bucket, CopySource=copySource, Key=key)
-        s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
         logging.info(
-            f"Moved {data_filename} to the success directory under folder name {success_folder}"
+            f"{processed_findings}/{len(findings_data)} documents successfully processed"
         )
-    except Exception as err:
-        logging.warning(f"Error Message: {err}")
 
-        # Create error folders depending on how processing went
-        copySource = s3_bucket + "/" + data_filename
-        key = f"{success_folder}/{data_filename.replace('.json', '')}_{str(datetime.datetime.now())}.json"
+        if save_succeeded:
+            # Create success folders depending on how processing went
+            succeeded_filename = data_filename.replace(
+                ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
+            )
+            key = f"{SUCCEEDED_FOLDER}/{succeeded_filename}"
 
-        # Move data object to error directory
-        s3_client.copy_object(Bucket=s3_bucket, CopySource=copySource, Key=key)
-        try:
+            # Move data object to success directory
+            s3_client.copy_object(
+                Bucket=s3_bucket,
+                CopySource={"Bucket": s3_bucket, "Key": data_filename},
+                Key=key,
+            )
+            # Delete original object
             s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
-        except ClientError as delete_error:
-            logging.info(f"Error deleting file with error: {delete_error}")
 
-        logging.info(
-            f"Error occurred. Moved {data_filename} to the error directory under folder name {error_folder}"
-        )
+            logging.info(
+                f"Moved {data_filename} to the success directory under folder "
+                f"name {SUCCEEDED_FOLDER} as {succeeded_filename}"
+            )
+    except Exception as err:
+        logging.error(f"Error Message {type(err)}: {err}")
+
+        if save_failed:
+            # Create failure folders depending on how processing went
+            failed_filename = data_filename.replace(
+                ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
+            )
+            key = f"{FAILED_FOLDER}/{failed_filename}"
+
+            # Move data object to failure directory
+            s3_client.copy_object(
+                Bucket=s3_bucket,
+                CopySource={"Bucket": s3_bucket, "Key": data_filename},
+                Key=key,
+            )
+            try:
+                s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
+            except ClientError as delete_error:
+                logging.error(f"Error deleting file with error: {delete_error}")
+
+            logging.error(
+                f"Error occurred. Moved {data_filename} to the failed directory"
+                f" under folder name {FAILED_FOLDER} as {failed_filename}"
+            )
     finally:
         # Delete local temp data file(s) regardless of whether or not
         # any exceptions were thrown in the try block above
         os.remove(temp_data_filepath)
-        os.remove(temp_field_data_filepath)
-        logging.info(
-            f"Deleted temporary {data_filename} and {temp_field_data_filepath} from local filesystem"
-        )
+        logging.info(f"Deleted temporary {data_filename} from local filesystem")
 
     return True
 
@@ -337,13 +323,13 @@ def main():
         args["--data-filename"],
         args["--db-hostname"],
         args["--db-port"],
-        args["--fields-filename"],
-        args["--log-level"],
-        args["--error-folder"],
-        args["--success-folder"],
+        args["--field-map"],
+        args["--save-failed"],
+        args["--save-succeeded"],
         args["--ssm-db-name"],
         args["--ssm-db-user"],
         args["--ssm-db-password"],
+        args["--log-level"],
     )
 
     # Stop logging and clean up
