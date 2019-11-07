@@ -39,7 +39,15 @@ blank, the script will remove that JSON element from the record.
 }
 ```
 
-## Note ##
+## Operational Note ##
+
+This script will attempt to extract the properly formatted RVA ID from the data
+presented from the file. To do so, it extracts the last four numbers from the
+RVA ID in the record and prepends the letters "RV" to the four numbers. This will
+be used as the RVA ID. This avoids any mishaps from improperly formatted IDs such
+as RV0RV0123 or RV00123.
+
+## Docker Note ##
 
 Please note that the corresponding Docker image _must_ be rebuilt
 locally if the script `build.sh` changes.  Given that rebuilding the Docker
