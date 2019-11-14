@@ -201,7 +201,7 @@ def import_data(
                 finding["RVA ID"] = "RV" + rvaId.group(1)
             else:
                 logging.error(
-                    f"Error retrieving RVA ID. ID provided {finding['RVA ID']} could not be parsed. Skipping record..."
+                    f"Error extracting RVA ID from provided value '{finding['RVA ID']}'. Skipping record..."
                 )
                 continue
             # Only process appropriate findings records.
