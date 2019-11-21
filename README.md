@@ -39,7 +39,14 @@ blank, the script will remove that JSON element from the record.
 }
 ```
 
-## Note ##
+## Operational Note ##
+
+This script will attempt to extract the RVA ID from the `RVA ID` field in a record
+after field mapping has taken place. It expects the ID found to end in the format
+`DDDD`, but allows an increment such that `0123.4` is valid. However, the matched
+ID is reduced to the four leading digits in this case.
+
+## Docker Note ##
 
 Please note that the corresponding Docker image _must_ be rebuilt
 locally if the script `build.sh` changes.  Given that rebuilding the Docker

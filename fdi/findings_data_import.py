@@ -46,6 +46,7 @@ from datetime import datetime
 import json
 import logging
 import os
+import re
 import tempfile
 import urllib
 
@@ -133,11 +134,6 @@ def import_data(
     temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
 
     try:
-        # Extract RV ID from filename. The filename is expected to be in the format:
-        # <RVA ID>_<any optional information>assessment_data.json
-        logging.info(f"Extracting RVA ID from filename for {data_filename}")
-        rvaId = data_filename.split("_")[0]
-
         logging.info(f"Retrieving {data_filename}...")
 
         # Fetch findings data file from S3 bucket
@@ -199,10 +195,17 @@ def import_data(
                         finding[field_map_dict[field]] = finding[field]
                     finding.pop(field, None)
 
+            # Get RVA ID in format DDDD(.D+) from the end of the "RVA ID" field.
+            rvaId = re.search(r"(\d{4})(?:\.\d+)?$", finding["RVA ID"])
+            if rvaId:
+                finding["RVA ID"] = "RV" + rvaId.group(1)
+            else:
+                logging.error(
+                    f"Error extracting RVA ID from provided value '{finding['RVA ID']}'. Skipping record..."
+                )
+                continue
             # Only process appropriate findings records.
             if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
-                finding["RVA ID"] = rvaId
-
                 # If the finding already exists, update it with new data.
                 # Otherwise insert it as a new document (upsert=True).
                 db.findings.find_one_and_update(
