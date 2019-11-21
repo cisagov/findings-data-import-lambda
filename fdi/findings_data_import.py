@@ -195,8 +195,8 @@ def import_data(
                         finding[field_map_dict[field]] = finding[field]
                     finding.pop(field, None)
 
-            # Get RVA ID from last 4 digits
-            rvaId = re.search(r"(\d{4})(?:\.\d{1,})?$", finding["RVA ID"])
+            # Get RVA ID in format DDDD(.D+) from the end of the "RVA ID" field.
+            rvaId = re.search(r"(\d{4})(?:\.\d+)?$", finding["RVA ID"])
             if rvaId:
                 finding["RVA ID"] = "RV" + rvaId.group(1)
             else:
