@@ -51,7 +51,7 @@ project.
 On the Mac, installation is as simple as `brew install pyenv
 pyenv-virtualenv` and adding this to your profile:
 
-```console
+```bash
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 ```
@@ -95,6 +95,17 @@ pre-commit install
 At this point the pre-commit checks will run against any files that
 you attempt to commit.  If you want to run the checks against the
 entire repo, just execute `pre-commit run --all-files`.
+
+### Running unit and system tests ###
+
+In addition to the pre-commit checks the CI system will run the suite
+of unit and system tests that are included with this project.  To run
+these tests locally execute `pytest` from the root of the project.
+
+We encourage any updates to these tests to improve the overall code
+coverage.  If your pull request adds new functionality we would
+appreciate it if you extend existing test cases, or add new ones to
+exercise the newly added code.
 
 ## Public domain ##
 

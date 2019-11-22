@@ -1,5 +1,5 @@
 """
-This is the setup module for findings data import.
+This is the setup module for findings data import lambda.
 
 Based on:
 
@@ -47,9 +47,10 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     # What does your project relate to?
-    keywords="fdi ingest",
+    keywords="fdi ingest lambda",
     packages=["fdi"],
     install_requires=["docopt"],
     extras_require={"test": ["pre-commit"]},
