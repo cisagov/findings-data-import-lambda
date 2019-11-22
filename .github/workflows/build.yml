@@ -58,9 +58,9 @@ jobs:
           python -m pip install --upgrade pip wheel
           pip install --upgrade -r requirements.txt
       - name: Build environment
-        run: docker compose build
+        run: docker-compose build
       - name: Generate lambda zip
-        run: docker compose up -d
+        run: docker-compose up -d
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
