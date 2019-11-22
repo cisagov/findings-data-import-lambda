@@ -60,7 +60,7 @@ jobs:
       - name: Build environment
         run: docker-compose build
       - name: Generate lambda zip
-        run: docker-compose up -d
+        run: docker-compose up
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
