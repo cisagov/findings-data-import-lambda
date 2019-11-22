@@ -1,8 +1,9 @@
 # findings-data-import-lambda ƛ #
 
-[![Build Status](https://travis-ci.org/cisagov/findings-data-import-lambda.svg?branch=develop)](https://travis-ci.org/cisagov/findings-data-import-lambda.svg?branch=develop)
-[![Total alerts](https://img.shields.io/lgtm/alerts/github/cisagov/findings-data-import-lambda)](https://img.shields.io/lgtm/alerts/github/cisagov/findings-data-import-lambda)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/github/cisagov/findings-data-import-lambda)](https://img.shields.io/lgtm/grade/python/github/cisagov/findings-data-import-lambda)
+[![GitHub Build Status](https://github.com/cisagov/findings-data-import-lambda/workflows/build/badge.svg)](https://github.com/cisagov/findings-data-import-lambda/actions)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/context:python)
+[![Known Vulnerabilities](https://snyk.io/test/github/cisagov/findings-data-import-lambda/develop/badge.svg)](https://snyk.io/test/github/cisagov/findings-data-import-lambda)
 
 `findings-data-import-lambda` contains code to build an AWS Lambda function
 that reads findings data from a JSON file in an S3 bucket and imports it
