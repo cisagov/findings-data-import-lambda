@@ -54,7 +54,12 @@ import urllib
 from boto3 import client as boto3_client
 from botocore.exceptions import ClientError
 import docopt
-from pymongo import MongoClient
+from pymongo import (
+    MongoClient,
+    ConnectionFailure,
+    OperationFailure,
+    ServerSelectionTimeoutError,
+)
 
 # Local library
 from fdi import __version__
@@ -133,149 +138,220 @@ def import_data(
     # Securely create a temporary file to store the JSON data in
     temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
 
+    logging.info(f"Retrieving {data_filename}...")
     try:
-        logging.info(f"Retrieving {data_filename}...")
-
         # Fetch findings data file from S3 bucket
         s3_client.download_file(
             Bucket=s3_bucket, Key=data_filename, Filename=temp_data_filepath
         )
+    except ClientError as err:
+        logging.error("Error downloading file from S3 bucket")
+        error_and_finish(
+            err, False, s3_bucket, data_filename, temp_data_filepath, s3_client
+        )
 
+    try:
         # Fetch object for the field_map JSON
         field_map_object = s3_client.get_object(Bucket=s3_bucket, Key=field_map)
+    except ClientError as err:
+        logging.error("Error fetching object for the field_map with error")
+        error_and_finish(
+            err, False, s3_bucket, data_filename, temp_data_filepath, s3_client
+        )
 
+    try:
         # Load field_map JSONs
         field_map_dict = json.loads(
             field_map_object.get("Body", "{}").read().decode("utf-8")
         )
-        logging.info(f"Configuration data loaded from {field_map}")
-        logging.debug(f"Configuration data: {field_map_dict}")
+    except Exception as err:
+        logging.error("Error loading JSON from field_map body with error")
+        error_and_finish(
+            err, False, s3_bucket, data_filename, temp_data_filepath, s3_client
+        )
 
-        # Load data JSON
+    logging.info(f"Configuration data loaded from {field_map}")
+    logging.debug(f"Configuration data: {field_map_dict}")
+
+    # Load data JSON
+    try:
         with open(temp_data_filepath) as data_json_file:
-            findings_data = json.load(data_json_file)
-
-        logging.info(f"JSON data loaded from {data_filename}.")
-
-        # Fetch database credentials from AWS SSM
-        db_info = dict()
-        for ssm_param_name, key in (
-            (ssm_db_name, "db_name"),
-            (ssm_db_user, "username"),
-            (ssm_db_password, "password"),
-        ):
-            response = ssm_client.get_parameter(
-                Name=ssm_param_name, WithDecryption=True
-            )
-            db_info[key] = response["Parameter"]["Value"]
-
-        # Set up database connection
-        credPw = urllib.parse.quote(db_info["password"])
-        db_uri = (
-            f"mongodb://{db_info['username']}:{credPw}@"
-            f"{db_hostname}:{db_port}/{db_info['db_name']}"
-        )
-
-        # Connect to MongoDB with timeout so Lambda doesn't run over
-        db_connection = MongoClient(
-            host=db_uri, serverSelectionTimeoutMS=2500, tz_aware=True
-        )
-        db = db_connection[db_info["db_name"]]
-        logging.info(
-            f"DB connection set up to {db_hostname}:{db_port}/{db_info['db_name']}"
-        )
-
-        processed_findings = 0
-        # Iterate through data and save each record to the database
-        for finding in findings_data:
-            # Replace or rename fields from replacement file
-            for field in field_map_dict:
-                if field in finding.keys():
-                    if field_map_dict[field]:
-                        finding[field_map_dict[field]] = finding[field]
-                    finding.pop(field, None)
-
-            # Get RVA ID in format DDDD(.D+) from the end of the "RVA ID" field.
-            rvaId = re.search(r"(\d{4})(?:\.\d+)?$", finding["RVA ID"])
-            if rvaId:
-                finding["RVA ID"] = "RV" + rvaId.group(1)
-            else:
-                logging.error(
-                    f"Error extracting RVA ID from provided value '{finding['RVA ID']}'. Skipping record..."
-                )
-                continue
-            # Only process appropriate findings records.
-            if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
-                # If the finding already exists, update it with new data.
-                # Otherwise insert it as a new document (upsert=True).
-                db.findings.find_one_and_update(
-                    {
-                        "RVA ID": finding["RVA ID"],
-                        "NCATS ID": finding["NCATS ID"],
-                        "Severity": finding["Severity"],
-                    },
-                    {"$set": finding},
-                    upsert=True,
+            try:
+                findings_data = json.load(data_json_file)
+            except Exception as err:
+                logging.error("Error loading JSON map from temp filepath")
+                error_and_finish(
+                    err, False, s3_bucket, data_filename, temp_data_filepath, s3_client
                 )
 
-                processed_findings += 1
+            logging.info(f"JSON data loaded from {data_filename}.")
 
-        logging.info(
-            f"{processed_findings}/{len(findings_data)} documents successfully processed"
-        )
+            # Fetch database credentials from AWS SSM
+            db_info = dict()
+            for ssm_param_name, key in (
+                (ssm_db_name, "db_name"),
+                (ssm_db_user, "username"),
+                (ssm_db_password, "password"),
+            ):
+                try:
+                    response = ssm_client.get_parameter(
+                        Name=ssm_param_name, WithDecryption=True
+                    )
+                    db_info[key] = response["Parameter"]["Value"]
+                except Exception as err:
+                    logging.error("Error retrieving parameter from secure store")
+                    error_and_finish(
+                        err,
+                        False,
+                        s3_bucket,
+                        data_filename,
+                        temp_data_filepath,
+                        s3_client,
+                    )
 
-        if save_succeeded:
-            # Create success folders depending on how processing went
-            succeeded_filename = data_filename.replace(
-                ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
+            # Set up database connection
+            credPw = urllib.parse.quote(db_info["password"])
+            db_uri = (
+                f"mongodb://{db_info['username']}:{credPw}@"
+                f"{db_hostname}:{db_port}/{db_info['db_name']}"
             )
-            key = f"{SUCCEEDED_FOLDER}/{succeeded_filename}"
 
-            # Move data object to success directory
-            s3_client.copy_object(
-                Bucket=s3_bucket,
-                CopySource={"Bucket": s3_bucket, "Key": data_filename},
-                Key=key,
+            # Connect to MongoDB with timeout so Lambda doesn't run over
+            db_connection = MongoClient(
+                host=db_uri, serverSelectionTimeoutMS=2500, tz_aware=True
             )
-            # Delete original object
-            s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
+            db = db_connection[db_info["db_name"]]
+            logging.info(
+                f"DB connection set up to {db_hostname}:{db_port}/{db_info['db_name']}"
+            )
+
+            processed_findings = 0
+            # Iterate through data and save each record to the database
+            for finding in findings_data:
+                # Replace or rename fields from replacement file
+                for field in field_map_dict:
+                    if field in finding.keys():
+                        if field_map_dict[field]:
+                            finding[field_map_dict[field]] = finding[field]
+                        finding.pop(field, None)
+
+                # Get RVA ID in format DDDD(.D+) from the end of the "RVA ID" field.
+                rvaId = re.search(r"(\d{4})(?:\.\d+)?$", finding["RVA ID"])
+                if rvaId:
+                    finding["RVA ID"] = "RV" + rvaId.group(1)
+                else:
+                    logging.error(
+                        f"Error extracting RVA ID from provided value '{finding['RVA ID']}'. Skipping record..."
+                    )
+                    continue
+                # Only process appropriate findings records.
+                if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
+                    # If the finding already exists, update it with new data.
+                    # Otherwise insert it as a new document (upsert=True).
+                    try:
+                        db.findings.find_one_and_update(
+                            {
+                                "RVA ID": finding["RVA ID"],
+                                "NCATS ID": finding["NCATS ID"],
+                                "Severity": finding["Severity"],
+                            },
+                            {"$set": finding},
+                            upsert=True,
+                        )
+                    except (
+                        ConnectionFailure,
+                        OperationFailure,
+                        ServerSelectionTimeoutError,
+                    ) as err:
+                        logging.error("Error in(up)serting record to Mongo Database")
+                        error_and_finish(
+                            err,
+                            True,
+                            s3_bucket,
+                            data_filename,
+                            temp_data_filepath,
+                            s3_client,
+                        )
+
+                    processed_findings += 1
 
             logging.info(
-                f"Moved {data_filename} to the success directory under folder "
-                f"name {SUCCEEDED_FOLDER} as {succeeded_filename}"
+                f"{processed_findings}/{len(findings_data)} documents successfully processed"
             )
-    except Exception as err:
-        logging.error(f"Error Message {type(err)}: {err}")
 
-        if save_failed:
-            # Create failure folders depending on how processing went
-            failed_filename = data_filename.replace(
-                ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
-            )
-            key = f"{FAILED_FOLDER}/{failed_filename}"
+            if save_succeeded:
+                # Create success folders depending on how processing went
+                succeeded_filename = data_filename.replace(
+                    ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
+                )
+                key = f"{SUCCEEDED_FOLDER}/{succeeded_filename}"
 
-            # Move data object to failure directory
-            s3_client.copy_object(
-                Bucket=s3_bucket,
-                CopySource={"Bucket": s3_bucket, "Key": data_filename},
-                Key=key,
-            )
-            try:
-                s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
-            except ClientError as delete_error:
-                logging.error(f"Error deleting file with error: {delete_error}")
+                # Move data object to success directory
+                try:
+                    s3_client.copy_object(
+                        Bucket=s3_bucket,
+                        CopySource={"Bucket": s3_bucket, "Key": data_filename},
+                        Key=key,
+                    )
+                    # Delete original object
+                    s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
+                except ClientError as err:
+                    logging.error("Error organizing S3 bucket following processing.")
+                    error_and_finish(
+                        err,
+                        False,
+                        s3_bucket,
+                        data_filename,
+                        temp_data_filepath,
+                        s3_client,
+                    )
 
-            logging.error(
-                f"Error occurred. Moved {data_filename} to the failed directory"
-                f" under folder name {FAILED_FOLDER} as {failed_filename}"
-            )
-    finally:
-        # Delete local temp data file(s) regardless of whether or not
-        # any exceptions were thrown in the try block above
-        os.remove(temp_data_filepath)
-        logging.info(f"Deleted temporary {data_filename} from local filesystem")
+                logging.info(
+                    f"Moved {data_filename} to the success directory under folder "
+                    f"name {SUCCEEDED_FOLDER} as {succeeded_filename}"
+                )
+    except EnvironmentError as err:
+        logging.error("Error opening temp file")
+        error_and_finish(
+            err, False, s3_bucket, data_filename, temp_data_filepath, s3_client
+        )
 
     return True
+
+
+def error_and_finish(
+    err, save_failed, s3_bucket, data_filename, temp_data_filepath, s3_client
+):
+    """Handle errors that arise and organize error folder (if needed)."""
+    logging.error(f"Error Message {type(err)}: {err}")
+
+    if save_failed:
+        # Create failure folders depending on how processing went
+        failed_filename = data_filename.replace(
+            ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
+        )
+        key = f"{FAILED_FOLDER}/{failed_filename}"
+
+        # Move data object to failure directory
+        s3_client.copy_object(
+            Bucket=s3_bucket,
+            CopySource={"Bucket": s3_bucket, "Key": data_filename},
+            Key=key,
+        )
+        try:
+            s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
+        except ClientError as delete_error:
+            logging.error(f"Error deleting file with error: {delete_error}")
+
+        logging.error(
+            f"Error occurred. Moved {data_filename} to the failed directory"
+            f" under folder name {FAILED_FOLDER} as {failed_filename}"
+        )
+
+    # Delete local temp data file(s) regardless of whether or not
+    # any exceptions were thrown in the try block above
+    os.remove(temp_data_filepath)
+    logging.info(f"Deleted temporary {data_filename} from local filesystem")
 
 
 def main():
