@@ -48,7 +48,7 @@ import logging
 import os
 import re
 import tempfile
-import urllib
+import urllib.parse
 
 # Third-party libraries (install with pip)
 from boto3 import client as boto3_client
@@ -138,11 +138,15 @@ def import_data(
 
         # Fetch findings data file from S3 bucket
         s3_client.download_file(
-            Bucket=s3_bucket, Key=data_filename, Filename=temp_data_filepath
+            Bucket=s3_bucket,
+            Key=urllib.parse.quote(data_filename),
+            Filename=temp_data_filepath,
         )
 
         # Fetch object for the field_map JSON
-        field_map_object = s3_client.get_object(Bucket=s3_bucket, Key=field_map)
+        field_map_object = s3_client.get_object(
+            Bucket=s3_bucket, Key=urllib.parse.quote(field_map)
+        )
 
         # Load field_map JSONs
         field_map_dict = json.loads(
@@ -235,10 +239,12 @@ def import_data(
             s3_client.copy_object(
                 Bucket=s3_bucket,
                 CopySource={"Bucket": s3_bucket, "Key": data_filename},
-                Key=key,
+                Key=urllib.parse.quote(key),
             )
             # Delete original object
-            s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
+            s3_client.delete_object(
+                Bucket=s3_bucket, Key=urllib.parse.quote(data_filename)
+            )
 
             logging.info(
                 f"Moved {data_filename} to the success directory under folder "
@@ -258,10 +264,12 @@ def import_data(
             s3_client.copy_object(
                 Bucket=s3_bucket,
                 CopySource={"Bucket": s3_bucket, "Key": data_filename},
-                Key=key,
+                Key=urllib.parse.quote(key),
             )
             try:
-                s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
+                s3_client.delete_object(
+                    Bucket=s3_bucket, Key=urllib.parse.quote(data_filename)
+                )
             except ClientError as delete_error:
                 logging.error(f"Error deleting file with error: {delete_error}")
 
