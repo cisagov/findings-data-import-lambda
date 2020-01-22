@@ -1,9 +1,10 @@
 """This module contains the lamdba_handler code."""
 
+# Standard Python Libraries
 import logging
 import os
 
-# Local module
+# cisagov Libraries
 from fdi import findings_data_import as fdi
 
 # This Lambda function expects the following environment variables to be

@@ -41,7 +41,7 @@ Options:
                               [default: warning]
 """
 
-# Standard libraries
+# Standard Python Libraries
 from datetime import datetime
 import json
 import logging
@@ -50,13 +50,13 @@ import re
 import tempfile
 import urllib.parse
 
-# Third-party libraries (install with pip)
+# Third-Party Libraries
 from boto3 import client as boto3_client
 from botocore.exceptions import ClientError
 import docopt
 from pymongo import MongoClient
 
-# Local library
+# cisagov Libraries
 from fdi import __version__
 
 SUCCEEDED_FOLDER = "success"
