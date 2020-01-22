@@ -56,8 +56,8 @@ BUILD_DIR=/build
 # Copy all packages, including any hidden dotfiles.  Also copy the
 # local fdi package and the Lambda handler.
 ###
-cp -rT $VENV_DIR/lib/python3.6/site-packages/ $BUILD_DIR
-cp -rT $VENV_DIR/lib64/python3.6/site-packages/ $BUILD_DIR
+cp -rT $VENV_DIR/lib/python3.8/site-packages/ $BUILD_DIR
+cp -rT $VENV_DIR/lib64/python3.8/site-packages/ $BUILD_DIR
 cp -r fdi $BUILD_DIR
 cp lambda_handler.py $BUILD_DIR
 

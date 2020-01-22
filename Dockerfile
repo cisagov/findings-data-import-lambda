@@ -1,4 +1,4 @@
-FROM lambci/lambda:build-python3.6
+FROM lambci/lambda:build-python3.8
 MAINTAINER Matthew Zackschewski <matthew.zackschewski@trio.dhs.gov>
 
 COPY build.sh .
