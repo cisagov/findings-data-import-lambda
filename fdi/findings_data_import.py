@@ -74,7 +74,6 @@ def import_data(
     ssm_db_name=None,
     ssm_db_user=None,
     ssm_db_password=None,
-    log_level="warning",
 ):
     """Ingest data from a JSON file in an S3 bucket to a database.
 
@@ -114,11 +113,6 @@ def import_data(
     ssm_db_password : str
         The name of the parameter in AWS SSM that holds the database password
         for the user with write permission to the assessment database.
-
-    log_level : str
-        If specified, then the log level will be set to the specified value.
-        Valid values are "debug", "info", "warning", "error", and "critical".
-        [default: warning]
 
     Returns
     -------

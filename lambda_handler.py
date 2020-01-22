@@ -82,7 +82,6 @@ def handler(event, context):
                 ssm_db_name=os.environ["ssm_db_name"],
                 ssm_db_user=os.environ["ssm_db_user"],
                 ssm_db_password=os.environ["ssm_db_password"],
-                log_level=log_level,
             )
         elif not filename.endswith(os.environ["file_suffix"]):
             logging.warning(
