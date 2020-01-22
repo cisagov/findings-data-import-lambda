@@ -72,7 +72,8 @@ setup(
     install_requires=["docopt", "pymongo", "setuptools >= 24.2.0"],
     extras_require={
         "test": [
-            "pre-commit",
+            "boto3",
+            "botocore" "pre-commit",
             "coveralls",
             # coveralls does not currently support coverage 5.0
             # https://github.com/coveralls-clients/coveralls-python/issues/203

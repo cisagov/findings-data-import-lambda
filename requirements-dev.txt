@@ -1,5 +1,3 @@
 -r requirements-test.txt
-boto3
-botocore
 ipython
 semver
