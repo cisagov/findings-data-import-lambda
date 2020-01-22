@@ -73,7 +73,8 @@ setup(
     extras_require={
         "test": [
             "boto3",
-            "botocore" "pre-commit",
+            "botocore",
+            "pre-commit",
             "coveralls",
             # coveralls does not currently support coverage 5.0
             # https://github.com/coveralls-clients/coveralls-python/issues/203
