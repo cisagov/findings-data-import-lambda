@@ -48,7 +48,7 @@ import logging
 import os
 import re
 import tempfile
-import urllib
+import urllib.parse
 
 # Third-party libraries (install with pip)
 from boto3 import client as boto3_client
@@ -128,6 +128,14 @@ def import_data(
     temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
 
     try:
+        # This allows us to access keys with spaces in them. When they are passed
+        # in to the lambda the psaces are replaced with plus signs which results
+        # in being unable to access the object with the given key. This WILL
+        # result in issues if the object also has plus signs as part of its name
+        # and ideally object names should contain none of the characters listed
+        # in https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+        # under the section "Characters That Might Require Special Handling".
+        data_filename = urllib.parse.unquote_plus(data_filename)
         logging.info(f"Retrieving {data_filename}...")
 
         # Fetch findings data file from S3 bucket
