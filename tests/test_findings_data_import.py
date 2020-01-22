@@ -11,15 +11,6 @@ import pytest
 # cisagov Libraries
 from fdi import findings_data_import as fdi
 
-log_levels = (
-    "debug",
-    "info",
-    "warning",
-    "error",
-    "critical",
-    pytest.param("critical2", marks=pytest.mark.xfail),
-)
-
 PROJECT_VERSION = fdi.__version__
 
 
