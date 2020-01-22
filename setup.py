@@ -69,7 +69,7 @@ setup(
     packages=find_packages(where="."),
     py_modules=[splitext(basename(path))[0] for path in glob("fdi/*.py")],
     include_package_data=True,
-    install_requires=["docopt", "pymongo", "setuptools >= 24.2.0"],
+    install_requires=["docopt", "pymongo"],
     extras_require={
         "test": [
             "boto3",
