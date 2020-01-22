@@ -24,17 +24,12 @@ source $VENV_DIR/bin/activate
 ###
 # Update pip and setuptools
 ###
-pip install --upgrade pip setuptools
+pip install --upgrade pip
 
 ###
-# Install local findings data import (fdi) module
+# Install local findings data import (fdi) module and requirements
 ###
 pip install -r requirements.txt
-
-###
-# Install other requirements
-###
-pip install --upgrade docopt>=0.6.2 pymongo>=3.7.2 pytz>=2019.1
 
 ###
 # Leave the Python virtual environment
