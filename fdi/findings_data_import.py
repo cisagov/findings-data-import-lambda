@@ -198,9 +198,12 @@ def import_data(
                     finding.pop(field, None)
 
             # Get RVA ID in format DDDD(.D+) from the end of the "RVA ID" field.
-            rvaId = re.search(r"(\d{4})(?:\.\d+)?$", finding["RVA ID"])
+            rvaId = re.search(r"(\d{4})(?:[.-](\d+))?$", finding["RVA ID"])
             if rvaId:
-                finding["RVA ID"] = "RV" + rvaId.group(1)
+                rID = f"RV{rvaId.group(1)}"
+                if rvaId.group(2) is not None:
+                    rID += f".{rvaId.group(2)}"
+                finding["RVA ID"] = rID
             else:
                 logging.error(
                     f"Error extracting RVA ID from provided value '{finding['RVA ID']}'. Skipping record..."
