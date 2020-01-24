@@ -13,7 +13,7 @@ ZIP_FILE=findings-data-import.zip
 # Set up the Python virtual environment
 ###
 VENV_DIR=/venv
-python -m venv $VENV_DIR
+python -m venv --system-site-packages $VENV_DIR
 # Here shellcheck complains because it can't follow the dynamic path.
 # The path doesn't even exist until runtime, so we must disable that
 # check.

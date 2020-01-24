@@ -69,11 +69,9 @@ setup(
     packages=find_packages(where="."),
     py_modules=[splitext(basename(path))[0] for path in glob("fdi/*.py")],
     include_package_data=True,
-    install_requires=["docopt", "pymongo"],
+    install_requires=["boto3", "botocore", "docopt", "pymongo"],
     extras_require={
         "test": [
-            "boto3",
-            "botocore",
             "pre-commit",
             "coveralls",
             # coveralls does not currently support coverage 5.0
