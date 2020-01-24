@@ -197,7 +197,7 @@ def import_data(
                         finding[field_map_dict[field]] = finding[field]
                     finding.pop(field, None)
 
-            # Get RVA ID in format DDDD(.D+) from the end of the "RVA ID" field.
+            # Get RVA ID in format DDDD([.-]D+) from the end of the "RVA ID" field.
             rvaId = re.search(r"(\d{4})(?:[.-](\d+))?$", finding["RVA ID"])
             if rvaId:
                 rID = f"RV{rvaId.group(1)}"
@@ -312,7 +312,6 @@ def main():
         args["--ssm-db-name"],
         args["--ssm-db-user"],
         args["--ssm-db-password"],
-        args["--log-level"],
     )
 
     # Stop logging and clean up
