@@ -10,10 +10,14 @@ set -o pipefail
 ZIP_FILE=findings-data-import.zip
 
 ###
-# Set up the Python virtual environment
+# Set up the Python virtual environment.
+# We use --system-site-packages so the venv has access to the packages already
+# installed in the container to avoid duplicating what will be available in the
+# lambda environment on AWS.
 ###
 VENV_DIR=/venv
 python -m venv --system-site-packages $VENV_DIR
+
 # Here shellcheck complains because it can't follow the dynamic path.
 # The path doesn't even exist until runtime, so we must disable that
 # check.
