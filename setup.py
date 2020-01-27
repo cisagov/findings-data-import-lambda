@@ -1,25 +1,39 @@
 """
-This is the setup module for findings data import lambda.
+This is the setup module for the findings data import lambda.
 
 Based on:
 
 - https://packaging.python.org/distributing/
 - https://github.com/pypa/sampleproject/blob/master/setup.py
+- https://blog.ionelmc.ro/2014/05/25/python-packaging/#the-structure
 """
 
-from setuptools import setup
+# Standard Python Libraries
+from glob import glob
+from os.path import basename, splitext
+
+# Third-Party Libraries
+from setuptools import find_packages, setup
 
 
 def readme():
     """Read in and return the contents of the project's README.md file."""
-    with open("README.md") as f:
+    with open("README.md", encoding="utf-8") as f:
         return f.read()
+
+
+def package_vars(version_file):
+    """Read in and return the variables defined by the version_file."""
+    pkg_vars = {}
+    with open(version_file) as f:
+        exec(f.read(), pkg_vars)  # nosec
+    return pkg_vars
 
 
 setup(
     name="fdi",
     # Versions should comply with PEP440
-    version="1.0.0",
+    version=package_vars("fdi/_version.py")["__version__"],
     description="Ingest data to a Mongo database",
     long_description=readme(),
     long_description_content_type="text/markdown",
@@ -49,11 +63,25 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
+    python_requires=">=3.6",
     # What does your project relate to?
     keywords="fdi ingest lambda",
-    packages=["fdi"],
-    install_requires=["docopt"],
-    extras_require={"test": ["pre-commit"]},
+    packages=find_packages(where="."),
+    py_modules=[splitext(basename(path))[0] for path in glob("fdi/*.py")],
+    include_package_data=True,
+    install_requires=["boto3", "botocore", "docopt", "pymongo", "setuptools >= 24.2.0"],
+    extras_require={
+        "test": [
+            "pre-commit",
+            "coveralls",
+            # coveralls does not currently support coverage 5.0
+            # https://github.com/coveralls-clients/coveralls-python/issues/203
+            # is the issue for this on the coveralls project
+            "coverage < 5.0",
+            "pytest-cov",
+            "pytest",
+        ]
+    },
     # Conveniently allows one to run the CLI tool as `example`
     entry_points={"console_scripts": ["fdi = fdi.findings_data_import:main"]},
 )

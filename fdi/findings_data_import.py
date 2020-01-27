@@ -41,22 +41,22 @@ Options:
                               [default: warning]
 """
 
-# Standard libraries
+# Standard Python Libraries
 from datetime import datetime
 import json
 import logging
 import os
 import re
 import tempfile
-import urllib
+import urllib.parse
 
-# Third-party libraries (install with pip)
+# Third-Party Libraries
 from boto3 import client as boto3_client
 from botocore.exceptions import ClientError
 import docopt
 from pymongo import MongoClient
 
-# Local library
+# cisagov Libraries
 from fdi import __version__
 
 SUCCEEDED_FOLDER = "success"
@@ -74,7 +74,6 @@ def import_data(
     ssm_db_name=None,
     ssm_db_user=None,
     ssm_db_password=None,
-    log_level="warning",
 ):
     """Ingest data from a JSON file in an S3 bucket to a database.
 
@@ -115,11 +114,6 @@ def import_data(
         The name of the parameter in AWS SSM that holds the database password
         for the user with write permission to the assessment database.
 
-    log_level : str
-        If specified, then the log level will be set to the specified value.
-        Valid values are "debug", "info", "warning", "error", and "critical".
-        [default: warning]
-
     Returns
     -------
     bool : Returns a boolean indicating if the data import was
@@ -134,6 +128,14 @@ def import_data(
     temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
 
     try:
+        # This allows us to access keys with spaces in them. When they are passed
+        # in to the lambda the psaces are replaced with plus signs which results
+        # in being unable to access the object with the given key. This WILL
+        # result in issues if the object also has plus signs as part of its name
+        # and ideally object names should contain none of the characters listed
+        # in https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+        # under the section "Characters That Might Require Special Handling".
+        data_filename = urllib.parse.unquote_plus(data_filename)
         logging.info(f"Retrieving {data_filename}...")
 
         # Fetch findings data file from S3 bucket
@@ -195,10 +197,13 @@ def import_data(
                         finding[field_map_dict[field]] = finding[field]
                     finding.pop(field, None)
 
-            # Get RVA ID in format DDDD(.D+) from the end of the "RVA ID" field.
-            rvaId = re.search(r"(\d{4})(?:\.\d+)?$", finding["RVA ID"])
+            # Get RVA ID in format DDDD([.-]D+) from the end of the "RVA ID" field.
+            rvaId = re.search(r"(\d{4})(?:[.-](\d+))?$", finding["RVA ID"])
             if rvaId:
-                finding["RVA ID"] = "RV" + rvaId.group(1)
+                rID = f"RV{rvaId.group(1)}"
+                if rvaId.group(2) is not None:
+                    rID += f".{rvaId.group(2)}"
+                finding["RVA ID"] = rID
             else:
                 logging.error(
                     f"Error extracting RVA ID from provided value '{finding['RVA ID']}'. Skipping record..."
@@ -307,7 +312,6 @@ def main():
         args["--ssm-db-name"],
         args["--ssm-db-user"],
         args["--ssm-db-password"],
-        args["--log-level"],
     )
 
     # Stop logging and clean up

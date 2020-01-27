@@ -10,10 +10,14 @@ set -o pipefail
 ZIP_FILE=findings-data-import.zip
 
 ###
-# Set up the Python virtual environment
+# Set up the Python virtual environment.
+# We use --system-site-packages so the venv has access to the packages already
+# installed in the container to avoid duplicating what will be available in the
+# lambda environment on AWS.
 ###
 VENV_DIR=/venv
-python -m venv $VENV_DIR
+python -m venv --system-site-packages $VENV_DIR
+
 # Here shellcheck complains because it can't follow the dynamic path.
 # The path doesn't even exist until runtime, so we must disable that
 # check.
@@ -24,17 +28,12 @@ source $VENV_DIR/bin/activate
 ###
 # Update pip and setuptools
 ###
-pip install --upgrade pip setuptools
+pip install --upgrade pip
 
 ###
-# Install local findings data import (fdi) module
+# Install local findings data import (fdi) module and requirements
 ###
 pip install -r requirements.txt
-
-###
-# Install other requirements
-###
-pip install --upgrade docopt>=0.6.2 pymongo>=3.7.2 pytz>=2019.1
 
 ###
 # Leave the Python virtual environment
@@ -56,8 +55,8 @@ BUILD_DIR=/build
 # Copy all packages, including any hidden dotfiles.  Also copy the
 # local fdi package and the Lambda handler.
 ###
-cp -rT $VENV_DIR/lib/python3.6/site-packages/ $BUILD_DIR
-cp -rT $VENV_DIR/lib64/python3.6/site-packages/ $BUILD_DIR
+cp -rT $VENV_DIR/lib/python3.8/site-packages/ $BUILD_DIR
+cp -rT $VENV_DIR/lib64/python3.8/site-packages/ $BUILD_DIR
 cp -r fdi $BUILD_DIR
 cp lambda_handler.py $BUILD_DIR
 

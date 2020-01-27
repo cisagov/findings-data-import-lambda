@@ -1,6 +1,7 @@
 # findings-data-import-lambda ƛ #
 
 [![GitHub Build Status](https://github.com/cisagov/findings-data-import-lambda/workflows/build/badge.svg)](https://github.com/cisagov/findings-data-import-lambda/actions)
+[![Coverage Status](https://coveralls.io/repos/github/cisagov/findings-data-import-lambda/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/findings-data-import-lambda?branch=develop)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/context:python)
 [![Known Vulnerabilities](https://snyk.io/test/github/cisagov/findings-data-import-lambda/develop/badge.svg)](https://snyk.io/test/github/cisagov/findings-data-import-lambda)

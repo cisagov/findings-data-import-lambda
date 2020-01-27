@@ -1,9 +1,10 @@
 """This module contains the lamdba_handler code."""
 
+# Standard Python Libraries
 import logging
 import os
 
-# Local module
+# cisagov Libraries
 from fdi import findings_data_import as fdi
 
 # This Lambda function expects the following environment variables to be
@@ -82,7 +83,6 @@ def handler(event, context):
                 ssm_db_name=os.environ["ssm_db_name"],
                 ssm_db_user=os.environ["ssm_db_user"],
                 ssm_db_password=os.environ["ssm_db_password"],
-                log_level=log_level,
             )
         elif not filename.endswith(os.environ["file_suffix"]):
             logging.warning(
