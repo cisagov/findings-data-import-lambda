@@ -63,6 +63,37 @@ SUCCEEDED_FOLDER = "success"
 FAILED_FOLDER = "failed"
 
 
+def move_processed_file(s3_client, bucket, folder, filename):
+    """Copy a processed file to the appropriate directory and delete the original."""
+    new_filename = filename.replace(
+        ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
+    )
+    key = f"{folder}/{new_filename}"
+
+    try:
+        # Copy object to appropriate directory in the S3 bucket.
+        s3_client.copy_object(
+            Bucket=bucket, CopySource={"Bucket": bucket, "Key": filename}, Key=key
+        )
+        logging.info(
+            f"Successfully copied '{filename}' to directory '{folder}' as '{new_filename}'."
+        )
+
+        # Delete the original object.
+        s3_client.delete_object(Bucket=bucket, Key=filename)
+        logging.info(f"Successfully deleted original '{filename}'.")
+    except ClientError as delete_error:
+        logging.error(
+            f"Failed while moving '{filename}' to '{folder}' directory."
+            f"Error: {delete_error}"
+        )
+
+
+def skip_record(index, file, message):
+    """Print a standard message when a record must be skipped."""
+    logging.warning(f"Skipping record {index} of '{file}': {message}.")
+
+
 def import_data(
     s3_bucket=None,
     data_filename=None,
@@ -189,8 +220,8 @@ def import_data(
 
         processed_findings = 0
         # Iterate through data and save each record to the database
-        for finding in findings_data:
-            # Replace or rename fields from replacement file
+        for index, finding in enumerate(findings_data):
+            # Replace or rename fields from replacement JSON
             for field in field_map_dict:
                 if field in finding.keys():
                     if field_map_dict[field]:
@@ -205,8 +236,10 @@ def import_data(
                     rID += f".{rvaId.group(2)}"
                 finding["RVA ID"] = rID
             else:
-                logging.error(
-                    f"Error extracting RVA ID from provided value '{finding['RVA ID']}'. Skipping record..."
+                skip_record(
+                    index,
+                    data_filename,
+                    f"Unable to extract valid RVA ID from '{finding['RVA ID']}'",
                 )
                 continue
             # Only process appropriate findings records.
@@ -224,61 +257,29 @@ def import_data(
                 )
 
                 processed_findings += 1
+            else:
+                skip_record(
+                    index, data_filename, "Missing 'RVA ID' or 'NCATS ID' field"
+                )
 
         logging.info(
-            f"{processed_findings}/{len(findings_data)} documents successfully processed"
+            f"{processed_findings}/{len(findings_data)} documents successfully processed."
         )
 
         if save_succeeded:
-            # Create success folders depending on how processing went
-            succeeded_filename = data_filename.replace(
-                ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
-            )
-            key = f"{SUCCEEDED_FOLDER}/{succeeded_filename}"
-
-            # Move data object to success directory
-            s3_client.copy_object(
-                Bucket=s3_bucket,
-                CopySource={"Bucket": s3_bucket, "Key": data_filename},
-                Key=key,
-            )
-            # Delete original object
-            s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
-
-            logging.info(
-                f"Moved {data_filename} to the success directory under folder "
-                f"name {SUCCEEDED_FOLDER} as {succeeded_filename}"
-            )
+            move_processed_file(s3_client, s3_bucket, SUCCEEDED_FOLDER, data_filename)
     except Exception as err:
         logging.error(f"Error Message {type(err)}: {err}")
 
         if save_failed:
-            # Create failure folders depending on how processing went
-            failed_filename = data_filename.replace(
-                ".json", f"_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}.json"
-            )
-            key = f"{FAILED_FOLDER}/{failed_filename}"
-
-            # Move data object to failure directory
-            s3_client.copy_object(
-                Bucket=s3_bucket,
-                CopySource={"Bucket": s3_bucket, "Key": data_filename},
-                Key=key,
-            )
-            try:
-                s3_client.delete_object(Bucket=s3_bucket, Key=data_filename)
-            except ClientError as delete_error:
-                logging.error(f"Error deleting file with error: {delete_error}")
-
-            logging.error(
-                f"Error occurred. Moved {data_filename} to the failed directory"
-                f" under folder name {FAILED_FOLDER} as {failed_filename}"
-            )
+            move_processed_file(s3_client, s3_bucket, FAILED_FOLDER, data_filename)
     finally:
         # Delete local temp data file(s) regardless of whether or not
         # any exceptions were thrown in the try block above
         os.remove(temp_data_filepath)
-        logging.info(f"Deleted temporary {data_filename} from local filesystem")
+        logging.info(
+            f"Deleted working copy of '{data_filename}' from local filesystem."
+        )
 
     return True
 
