@@ -263,7 +263,7 @@ def import_data(
                 )
 
         logging.info(
-            f"{processed_findings}/{len(findings_data)} documents successfully processed."
+            f"{processed_findings}/{len(findings_data)} documents successfully processed from '{data_filename}'."
         )
 
         if save_succeeded:
