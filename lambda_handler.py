@@ -39,20 +39,16 @@ from fdi import findings_data_import as fdi
 # and
 # https://stackoverflow.com/questions/37703609/using-python-logging-with-aws-lambda
 # for more details.
-root = logging.getLogger()
-if root.handlers:
-    for handler in root.handlers:
-        root.removeHandler(handler)
-
-        # Set up logging
-        log_level = logging.INFO
-        logging.basicConfig(
-            format="%(asctime)-15s %(levelname)s %(message)s", level=log_level
-        )
+logging_root = logging.getLogger()
+if logging_root.handlers:
+    for logging_handler in logging_root.handlers:
+        logging_root.removeHandler(logging_handler)
 
 
 def handler(event, context):
     """Handle all Lambda events."""
+    fdi.setup_logging(os.environ.get("log_level", "info"))
+
     logging.debug(f"AWS Event was: {event}")
 
     # Get info in the S3 event notification message from
@@ -61,6 +57,8 @@ def handler(event, context):
 
     filename = record["s3"]["object"]["key"]
 
+    result = False
+
     # Verify event has correct eventName
     if record["eventName"] == "ObjectCreated:Put":
         # Verify event originated from correct bucket and key
@@ -68,7 +66,7 @@ def handler(event, context):
             "object"
         ]["key"].endswith(os.environ["file_suffix"]):
             # Import the data
-            fdi.import_data(
+            result = fdi.import_data(
                 s3_bucket=os.environ["s3_bucket"],
                 data_filename=record["s3"]["object"]["key"],
                 db_hostname=os.environ["db_hostname"],
@@ -102,3 +100,5 @@ def handler(event, context):
     else:
         logging.warning(f"Unexpected eventName received: {record['eventName']}")
         logging.warning(f"Full AWS event: {event}")
+
+    return result

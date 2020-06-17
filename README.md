@@ -10,6 +10,11 @@
 that reads findings data from a JSON file in an S3 bucket and imports it
 into a database.
 
+## Contributing ##
+
+We welcome contributions!  Please see [here](CONTRIBUTING.md) for
+details.
+
 ## Example ##
 
 Building the AWS Lambda zip file:

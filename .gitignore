@@ -1,8 +1,9 @@
-.python-version
-.DS_Store
 *.egg-info
+.coverage
+.DS_Store
+.mypy_cache
+.pytest_cache
+.python-version
+.vscode
 __pycache__
 findings-data-import.zip
-.vscode
-.coverage
-.pytest_cache
