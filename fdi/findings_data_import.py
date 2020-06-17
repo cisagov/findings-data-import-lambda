@@ -76,6 +76,8 @@ def setup_logging(log_level):
         )
         return 1
 
+    return 0
+
 
 def move_processed_file(s3_client, bucket, folder, filename):
     """Copy a processed file to the appropriate directory and delete the original."""
