@@ -10,11 +10,6 @@
 that reads findings data from a JSON file in an S3 bucket and imports it
 into a database.
 
-## Contributing ##
-
-We welcome contributions!  Please see [here](CONTRIBUTING.md) for
-details.
-
 ## Example ##
 
 Building the AWS Lambda zip file:
@@ -60,6 +55,11 @@ locally if the script `build.sh` changes.  Given that rebuilding the Docker
 image is very fast (due to Docker's caching) if the script has not changed, it
 is a very good idea to _always_ run the `docker-compose build` step when
 using this tool.
+
+## Contributing ##
+
+We welcome contributions!  Please see [here](CONTRIBUTING.md) for
+details.
 
 ## License ##
 
