@@ -33,7 +33,7 @@ pip install --upgrade pip
 ###
 # Install local findings data import (fdi) module and requirements.
 ###
-pip install -r requirements.txt
+pip install --requirement requirements.txt
 
 ###
 # Leave the Python virtual environment.
