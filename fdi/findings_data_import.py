@@ -63,6 +63,22 @@ SUCCEEDED_FOLDER = "success"
 FAILED_FOLDER = "failed"
 
 
+def setup_logging(log_level):
+    """Set up logging at the provided level."""
+    try:
+        logging.basicConfig(
+            format="%(asctime)-15s %(levelname)s %(message)s", level=log_level.upper()
+        )
+    except ValueError:
+        logging.critical(
+            f'"{log_level}" is not a valid logging level.  Possible values '
+            "are debug, info, warning, error, and critical."
+        )
+        return 1
+
+    return 0
+
+
 def move_processed_file(s3_client, bucket, folder, filename):
     """Copy a processed file to the appropriate directory and delete the original."""
     new_filename = filename.replace(
@@ -290,17 +306,7 @@ def main():
     args = docopt.docopt(__doc__, version=__version__)
 
     # Set up logging
-    log_level = args["--log-level"]
-    try:
-        logging.basicConfig(
-            format="%(asctime)-15s %(levelname)s %(message)s", level=log_level.upper()
-        )
-    except ValueError:
-        logging.critical(
-            f'"{log_level}" is not a valid logging level.  Possible values '
-            "are debug, info, warning, error, and critical."
-        )
-        return 1
+    setup_logging(args["--log-level"])
 
     result = import_data(
         args["--s3-bucket"],
@@ -318,7 +324,7 @@ def main():
     # Stop logging and clean up
     logging.shutdown()
 
-    return result
+    return 0 if result else -1
 
 
 if __name__ == "__main__":

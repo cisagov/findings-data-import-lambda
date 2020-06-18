@@ -26,17 +26,17 @@ python -m venv --system-site-packages $VENV_DIR
 source $VENV_DIR/bin/activate
 
 ###
-# Update pip and setuptools
+# Upgrade pip.
 ###
 pip install --upgrade pip
 
 ###
-# Install local findings data import (fdi) module and requirements
+# Install local findings data import (fdi) module and requirements.
 ###
-pip install -r requirements.txt
+pip install --requirement requirements.txt
 
 ###
-# Leave the Python virtual environment
+# Leave the Python virtual environment.
 #
 # Note that we have to turn off nounset before running deactivate,
 # since otherwise we get an error that states "/venv/bin/activate:
@@ -47,13 +47,13 @@ deactivate
 set -o nounset
 
 ###
-# Set up the build directory
+# Set up the build directory.
 ###
 BUILD_DIR=/build
 
 ###
-# Copy all packages, including any hidden dotfiles.  Also copy the
-# local fdi package and the Lambda handler.
+# Copy all packages, including any hidden dotfiles. Also copy the
+# local fdi package and the lambda handler.
 ###
 cp -rT $VENV_DIR/lib/python3.8/site-packages/ $BUILD_DIR
 cp -rT $VENV_DIR/lib64/python3.8/site-packages/ $BUILD_DIR
@@ -61,7 +61,7 @@ cp -r fdi $BUILD_DIR
 cp lambda_handler.py $BUILD_DIR
 
 ###
-# Zip it all up
+# Zip it all up.
 ###
 OUTPUT_DIR=/output
 if [ ! -d $OUTPUT_DIR ]
@@ -73,5 +73,6 @@ if [ -e $OUTPUT_DIR/$ZIP_FILE ]
 then
     rm $OUTPUT_DIR/$ZIP_FILE
 fi
+
 cd $BUILD_DIR
 zip -rq9 $OUTPUT_DIR/$ZIP_FILE .

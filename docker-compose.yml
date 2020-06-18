@@ -3,6 +3,6 @@ version: '3.2'
 services:
   build_findings_data_import_lambda:
     build: .
-    image: 'dhsncats/build_data_ingestion_lambda'
+    image: 'cisagov/build_findings_data_import_lambda'
     volumes:
       - .:/output
