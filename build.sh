@@ -5,7 +5,7 @@ set -o errexit
 set -o pipefail
 
 ###
-# Define the name of the Lambda zip file being produced
+# Define the name of the Lambda zip file being produced.
 ###
 ZIP_FILE=findings-data-import.zip
 
