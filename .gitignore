@@ -1,9 +1,9 @@
-*.egg-info
+__pycache__
 .coverage
 .DS_Store
 .mypy_cache
 .pytest_cache
 .python-version
 .vscode
-__pycache__
+*.egg-info
 findings-data-import.zip
