@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """findings_data_import: A tool for extracting, transforming and loading JSON data to Mongo.
 
 The source data is a JSON file stored in an AWS S3 bucket.
@@ -325,7 +323,3 @@ def main():
     logging.shutdown()
 
     return 0 if result else -1
-
-
-if __name__ == "__main__":
-    main()
