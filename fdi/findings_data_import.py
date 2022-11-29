@@ -103,11 +103,6 @@ def move_processed_file(s3_client, bucket, folder, filename):
         )
 
 
-def skip_record(index, file, message):
-    """Print a standard message when a record must be skipped."""
-    logging.warning(f"Skipping record {index} of '{file}': {message}.")
-
-
 def import_data(
     s3_bucket=None,
     data_filename=None,
@@ -250,11 +245,7 @@ def import_data(
                     rID += f".{rvaId.group(2)}"
                 finding["RVA ID"] = rID
             else:
-                skip_record(
-                    index,
-                    data_filename,
-                    f"Unable to extract valid RVA ID from '{finding['RVA ID']}'",
-                )
+                logging.warning(f"Skipping record {index} of '{data_filename}: Unable to extract valid RVA ID from '{finding['RVA ID']}")
                 continue
             # Only process appropriate findings records.
             if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
@@ -272,9 +263,7 @@ def import_data(
 
                 processed_findings += 1
             else:
-                skip_record(
-                    index, data_filename, "Missing 'RVA ID' or 'NCATS ID' field"
-                )
+                logging.warning(f"Skipping record {index} of '{data_filename}: Missing 'RVA ID' or 'NCATS ID' field.")                
 
         logging.info(
             f"{processed_findings}/{len(findings_data)} documents successfully processed from '{data_filename}'."
