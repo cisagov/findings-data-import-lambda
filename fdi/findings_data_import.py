@@ -103,6 +103,180 @@ def move_processed_file(s3_client, bucket, folder, filename):
         )
 
 
+
+def get_field_map(
+    s3_client=None,
+    s3_bucket=None,
+    field_map=None
+):
+    """Read a JSON field map object from a s3 bucket, and return the field map dict
+        
+    Parameters:
+    -----------
+    s3_client : S3.Client
+        The AWS S3 Client to retrieve the data file with .
+
+    s3_bucket : str
+        The AWS S3 bucket containing the data file.
+
+    field_map : str
+        The S3 key for the JSON file containing a map of incoming field names
+        to what they should be for the database.
+
+    Raises
+    ------
+
+    Returns
+    -------
+    dict : The field map dict object
+    """
+
+    try:
+        #Log what/where up front so the subsequent messages make more sense
+        logging.info(f"Attempting to read Configuration data from {field_map} in {s3_bucket}")
+        # Fetch object for the field_map JSON
+        field_map_object = s3_client.get_object(Bucket=s3_bucket, Key=field_map)
+        # Load field_map JSONs
+        field_map_dict = json.loads(
+            field_map_object.get("Body", "{}").read().decode("utf-8")
+        )
+        logging.info(f"Configuration data loaded from {field_map}")
+        logging.debug(f"Configuration data: {field_map_dict}")
+
+        return field_map_dict
+    except ClientError as ce:
+        raise Exception(f"Unable to download the field map data {field_map} from {s3_bucket}",ce)
+    except json.JSONDecodeError as je:
+        raise Exception("Unable to decode field map data, does not appear to be valid JSON.",je)
+    
+
+def download_file(
+    s3_client=None,
+    s3_bucket=None,
+    data_filename=None,
+):
+    """Download a file from a specified s3 bucket, and place it in a temporary file path. 
+    
+    Parameters:
+    -----------
+    s3_client : S3.Client
+        The AWS S3 Client to retrieve the data file with .
+
+    s3_bucket : str
+        The AWS S3 bucket containing the data file.
+
+    data_filename : str
+        The name of the file containing the data in the S3 bucket
+        above.
+
+    Raises
+    ------
+
+    Returns 
+    -------         
+        string, : The file path of the newly created temp file
+        dict   : The JSON data dictionary loaded from downloaded file
+    """
+    logging.info(f"Retrieving {data_filename} from {s3_bucket}...")
+
+    try:
+    # Securely create a temporary file to store the JSON data in
+        temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
+        # Fetch findings data file from S3 bucket
+        s3_client.download_file(
+            Bucket=s3_bucket, Key=data_filename, Filename=temp_data_filepath
+        )
+
+          # Load data JSON
+        with open(temp_data_filepath) as data_json_file:
+            findings_data = json.load(data_json_file)
+
+        logging.info(f"JSON data loaded from {data_filename}.")
+        return temp_data_filepath, findings_data
+    except json.JSONDecodeError as je:
+        raise(Exception(f"Unable to decode JSON data for {data_filename}",e).with_traceback())
+    except ClientError as e:
+        raise(Exception(f"Error downloading file {data_filename} from {s3_bucket} ",e).with_traceback())
+
+
+def setup_database_connection(
+    db_hostname=None,
+    db_port=None,
+    ssm_db_name=None,
+    ssm_db_user=None,
+    ssm_db_password=None,    
+
+    
+):
+    """Set up a mongo db connection based on the supplied host/port and 
+    SSM key values.
+
+
+    Parameters
+    ----------
+    db_hostname : str
+        The hostname that has the database to store the data in.
+
+    db_port : str
+        The port that the database server is listening on. [default: 27017]
+
+    ssm_db_name : str
+        The name of the parameter in AWS SSM that holds the name of the
+        database to store the assessment data in.
+
+    ssm_db_user : str
+        The name of the parameter in AWS SSM that holds the database username
+        with write permission to the assessment database.
+
+    ssm_db_password : str
+        The name of the parameter in AWS SSM that holds the database password
+        for the user with write permission to the assessment database.
+
+    Returns
+    -------
+    database : A database object returned from the MongoClient
+
+    """
+    try:
+        logging.info(f"Grabbing database credentials from SSM.")
+        # Fetch database credentials from AWS SSM
+        ssm_client = boto3_client("ssm")
+
+        db_info = dict()
+        for ssm_param_name, key in (
+            (ssm_db_name, "db_name"),
+            (ssm_db_user, "username"),
+            (ssm_db_password, "password"),
+        ):
+            response = ssm_client.get_parameter(
+                Name=ssm_param_name, WithDecryption=True
+            )
+            db_info[key] = response["Parameter"]["Value"]
+
+        logging.info(f"Connecting to the mongo db at {db_hostname} {db_port}")
+        # Set up database connection
+        credPw = urllib.parse.quote(db_info["password"])
+        db_uri = (
+            f"mongodb://{db_info['username']}:{credPw}@"
+            f"{db_hostname}:{db_port}/{db_info['db_name']}"
+        )
+
+        # Connect to MongoDB with timeout so Lambda doesn't run over
+        db_connection = MongoClient(
+            host=db_uri, serverSelectionTimeoutMS=2500, tz_aware=True
+        )
+        db = db_connection[db_info["db_name"]]
+        logging.info(
+            f"DB connection set up to {db_hostname}:{db_port}/{db_info['db_name']}"
+        )
+        return db
+    except ClientError as ce:
+        raise Exception("Unable to fetch database credentials from the SSM", ce).with_traceback()
+    #Handle all mongo exceptions the same way.. 
+    except Exception as e: 
+        raise Exception("Unable to connect to the mongo db", e).with_traceback()        
+
+
 def import_data(
     s3_bucket=None,
     data_filename=None,
@@ -162,10 +336,7 @@ def import_data(
     """
     # Boto3 clients for S3 and SSM
     s3_client = boto3_client("s3")
-    ssm_client = boto3_client("ssm")
-
-    # Securely create a temporary file to store the JSON data in
-    temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
+    
 
     try:
         # This allows us to access keys with spaces in them. When they are passed
@@ -176,56 +347,24 @@ def import_data(
         # in https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
         # under the section "Characters That Might Require Special Handling".
         data_filename = urllib.parse.unquote_plus(data_filename)
-        logging.info(f"Retrieving {data_filename}...")
 
-        # Fetch findings data file from S3 bucket
-        s3_client.download_file(
-            Bucket=s3_bucket, Key=data_filename, Filename=temp_data_filepath
+        #Download the data file into a temporary location
+        temp_data_filepath, findings_data = download_file(
+            s3_client=s3_client,s3_bucket=s3_bucket,data_filename=data_filename
         )
 
-        # Fetch object for the field_map JSON
-        field_map_object = s3_client.get_object(Bucket=s3_bucket, Key=field_map)
-
-        # Load field_map JSONs
-        field_map_dict = json.loads(
-            field_map_object.get("Body", "{}").read().decode("utf-8")
-        )
-        logging.info(f"Configuration data loaded from {field_map}")
-        logging.debug(f"Configuration data: {field_map_dict}")
-
-        # Load data JSON
-        with open(temp_data_filepath) as data_json_file:
-            findings_data = json.load(data_json_file)
-
-        logging.info(f"JSON data loaded from {data_filename}.")
-
-        # Fetch database credentials from AWS SSM
-        db_info = dict()
-        for ssm_param_name, key in (
-            (ssm_db_name, "db_name"),
-            (ssm_db_user, "username"),
-            (ssm_db_password, "password"),
-        ):
-            response = ssm_client.get_parameter(
-                Name=ssm_param_name, WithDecryption=True
-            )
-            db_info[key] = response["Parameter"]["Value"]
-
-        # Set up database connection
-        credPw = urllib.parse.quote(db_info["password"])
-        db_uri = (
-            f"mongodb://{db_info['username']}:{credPw}@"
-            f"{db_hostname}:{db_port}/{db_info['db_name']}"
+        field_map_dict = get_field_map(
+            s3_client=s3_client,s3_bucket=s3_bucket,field_map=field_map
         )
 
-        # Connect to MongoDB with timeout so Lambda doesn't run over
-        db_connection = MongoClient(
-            host=db_uri, serverSelectionTimeoutMS=2500, tz_aware=True
+        db = setup_database_connection(
+            ssm_db_name=ssm_db_name,
+            ssm_db_user=ssm_db_user,
+            ssm_db_password=ssm_db_password,
+            db_hostname=db_hostname,
+            db_port=db_port
         )
-        db = db_connection[db_info["db_name"]]
-        logging.info(
-            f"DB connection set up to {db_hostname}:{db_port}/{db_info['db_name']}"
-        )
+
 
         processed_findings = 0
         # Iterate through data and save each record to the database
