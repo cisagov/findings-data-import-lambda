@@ -439,7 +439,9 @@ def import_data(
         )
         logging.info(f"Updating records")
         for finding in valid_findings:
-             db.findings.find_one_and_update(
+            # if it has "NCATS ID", it is 'v1' record
+            if "NCATS ID" in finding:
+                db.findings.find_one_and_update(
                     {
                         "RVA ID": finding["RVA ID"],
                         "NCATS ID": finding["NCATS ID"],
@@ -448,6 +450,19 @@ def import_data(
                     {"$set": finding},
                     upsert=True,
                 )
+            #'v2' record has a findings collection and is one record per RVA ID 
+            elif "findings" in finding:
+                db.findings.find_one_and_update(
+                    {
+                        "RVA ID": finding["RVA ID"],                    
+                    },
+                    {"$set": finding},
+                    upsert=True,
+                )
+            #if it has neither, we've run into quite the problem.
+            else:
+                logging.error(f"A finding was encountered that was neither V1 or V2 schema. Cannot insert it.")
+            
 
         logging.info(
             f"{len(valid_findings)}/{len(findings_data)} documents successfully processed from '{data_filename}'."
