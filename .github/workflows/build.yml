@@ -90,6 +90,8 @@ jobs:
           PACKAGE_VERSION: ${{ steps.setup-env.outputs.shfmt-version }}
         run: go install mvdan.cc/sh/v3/cmd/shfmt@${PACKAGE_VERSION}
       - name: Install Terraform-docs
+        env:
+          TERRAFORM_DOCS_VERSION: ${{ steps.setup-env.outputs.terraform-docs-version }}
         run: |
           go install \
             github.com/terraform-docs/terraform-docs@${TERRAFORM_DOCS_VERSION}
