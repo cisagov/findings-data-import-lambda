@@ -5,6 +5,7 @@
 import logging
 import os
 import sys
+import json
 from unittest.mock import patch
 
 # Third-Party Libraries
@@ -77,3 +78,29 @@ def test_log_levels(level):
             logging.root.hasHandlers() is True
         ), "root logger should now have a handler"
         assert return_code == 0, "setup_logging() should return success (0)"
+
+
+
+def test_basic_validation():
+    """Test basic low level field validation for extract_findings."""
+    with open("tests/artifacts/field_map.json","r") as fm_file:
+        basic_field_map = json.load(fm_file)
+
+    print(basic_field_map)
+    valid_findings = [{'RVA ID': 'RV1234','NCATS ID': 'foo'}]
+
+    #all of the below should be invalid
+    invalid_findings = [        
+            {'Foo': 'bar'},
+            {'RVA ID': 'RV1234','foo':'bar'},
+            {'RVA ID': 'abcdef','NCATS ID': 1},
+            {'NCATS ID': '1234','foo':'bar'},
+            None
+        
+    ]
+
+    result = fdi.extract_findings(valid_findings,field_map_dict=basic_field_map)
+    assert len(result) == 1
+
+    result = fdi.extract_findings(invalid_findings,field_map_dict=basic_field_map)
+    assert len(result) == 0

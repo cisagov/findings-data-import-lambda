@@ -298,12 +298,24 @@ def extract_findings(findings_data,field_map_dict):
     valid_findings = []
     # Iterate through data and save each record to the database
     for index, finding in enumerate(findings_data):
+
+        if not finding or not hasattr(finding,"keys"):
+            logging.warning("Received an empty of invalid finding object, skipping.")
+            continue
+    
         # Replace or rename fields from replacement JSON
         for field in field_map_dict:
             if field in finding.keys():
                 if field_map_dict[field]:
                     finding[field_map_dict[field]] = finding[field]
                 finding.pop(field, None)
+
+        #we have to check for existence before accessing RVA ID....
+        if not "RVA ID" in finding.keys() or not "NCATS ID" in finding.keys():
+            logging.warning(
+                f"Skipping record {index}. Missing 'RVA ID' or 'NCATS ID' field."
+            )
+            continue
 
         # Get RVA ID in format DDDD([.-]D+) from the end of the "RVA ID" field.
         rvaId = re.search(r"(\d{4})(?:[.-](\d+))?$", finding["RVA ID"])
@@ -315,17 +327,14 @@ def extract_findings(findings_data,field_map_dict):
         else:
             logging.warning(f"Skipping record {index}: Unable to extract valid RVA ID from '{finding['RVA ID']}")
             continue
-        # Only process appropriate findings records.
-        if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
-            valid_findings.append(finding)
-        else:
-            logging.warning(
-                f"Skipping record {index}. Missing 'RVA ID' or 'NCATS ID' field."
-            )
+        
+        valid_findings.append(finding)
 
     logging.info(
         f"{len(valid_findings)}/{len(findings_data)} documents successfully processed."
     )
+
+    return valid_findings
 
 
 def import_data(
