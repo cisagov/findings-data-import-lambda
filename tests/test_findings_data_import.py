@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 import json
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, Mock
 
 # Third-Party Libraries
 import pytest
@@ -87,7 +87,7 @@ def test_basic_validation_v1():
         basic_field_map = json.load(fm_file)
 
     print(basic_field_map)
-    valid_findings = [{'RVA ID': 'RV1234','NCATS ID': 'foo'}]
+    valid_findings = [{'RVA ID': 'RV1234','NCATS ID': 'foo', 'Severity': 'High'}]
 
     #all of the below should be invalid
     invalid_findings = [        
@@ -151,4 +151,32 @@ def test_basic_validation_v2():
         result = fdi.extract_findings(findings_data=expected_findings,field_map_dict=basic_field_map)
 
         # right now, this ingest tool ignores everything but the specific findings. Is this intentional?
-        assert len(result) == 1       
+        assert len(result) == 1
+
+class FakeDB:
+    def __init__(self) -> None:
+        self.findings = {}
+
+def test_database_update():
+    """Test database update is called correctly against """
+
+    
+    v1_finding = {'RVA ID': 'RV1234','NCATS ID': 'foo', "Severity": "Critical"}
+    v2_finding = {'RVA ID': 'RV1234','findings': [] }
+
+    fake_db = Mock()
+    fake_db.findings.find_one_and_update = MagicMock(return_value=None)
+
+    fdi.update_record(db=fake_db,finding=v1_finding)
+    fake_db.findings.find_one_and_update.assert_called_with(
+            {
+                "RVA ID": 'RV1234',
+                "NCATS ID": 'foo',
+                "Severity": "Critical",
+            },
+            {"$set": v1_finding},
+            upsert=True,
+    )
+
+
+    #set up a mocked database, and we'll check it's calls

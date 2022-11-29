@@ -318,7 +318,7 @@ def extract_findings(findings_data,field_map_dict):
         
         #work with v1 and v2. If has NCATS ID  OR findings the document is probably OK
         if not "RVA ID" in finding.keys() or (
-            not "NCATS ID" in finding.keys() and not "findings" in finding.keys()
+            not ("NCATS ID" in finding.keys() and "Severity" in finding.keys()) and not "findings" in finding.keys()
             ):
             logging.warning(
                 f"Skipping record {index}. Missing 'RVA ID' or 'NCATS ID' field."
@@ -365,7 +365,7 @@ def update_record(
         raise ValueError("The passed finding had no RVA ID field.")
 
     # if it has "NCATS ID", it is 'v1' record
-    if "NCATS ID" in finding:
+    if "NCATS ID" in finding and "Severity" in finding:
         finding['schema'] = 'v1'
         db.findings.find_one_and_update(
             {
