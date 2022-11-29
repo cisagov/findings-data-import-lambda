@@ -345,6 +345,51 @@ def extract_findings(findings_data,field_map_dict):
     return valid_findings
 
 
+def update_record(
+    db=None,
+    finding=None
+):
+    """Insert or update a record, based on the (naively) detected schema type
+
+    Parameters
+    ----------
+    db : MongoClient database
+        The database to update
+
+    finding: dict
+        The finding data to insert. 
+
+    """
+
+    if not "RVA ID" in finding:
+        raise ValueError("The passed finding had no RVA ID field.")
+
+    # if it has "NCATS ID", it is 'v1' record
+    if "NCATS ID" in finding:
+        finding['schema'] = 'v1'
+        db.findings.find_one_and_update(
+            {
+                "RVA ID": finding["RVA ID"],
+                "NCATS ID": finding["NCATS ID"],
+                "Severity": finding["Severity"],
+            },
+            {"$set": finding},
+            upsert=True,
+        )
+    #'v2' record has a findings collection and is one record per RVA ID 
+    elif "findings" in finding:
+        finding['schema'] = 'v2'
+        db.findings.find_one_and_update(
+            {
+                "RVA ID": finding["RVA ID"],                    
+            },
+            {"$set": finding},
+            upsert=True,
+        )
+    else:
+        raise ValueError("The passed finding was not identifiable as V1 or V2 schema")                        
+    
+
 def import_data(
     s3_bucket=None,
     data_filename=None,
@@ -439,32 +484,7 @@ def import_data(
         )
         logging.info(f"Updating records")
         for finding in valid_findings:
-            # if it has "NCATS ID", it is 'v1' record
-            if "NCATS ID" in finding:
-                finding['schema'] = 'v1'
-                db.findings.find_one_and_update(
-                    {
-                        "RVA ID": finding["RVA ID"],
-                        "NCATS ID": finding["NCATS ID"],
-                        "Severity": finding["Severity"],
-                    },
-                    {"$set": finding},
-                    upsert=True,
-                )
-            #'v2' record has a findings collection and is one record per RVA ID 
-            elif "findings" in finding:
-                finding['schema'] = 'v2'
-                db.findings.find_one_and_update(
-                    {
-                        "RVA ID": finding["RVA ID"],                    
-                    },
-                    {"$set": finding},
-                    upsert=True,
-                )
-            #if it has neither, we've run into quite the problem.
-            else:
-                logging.error(f"A finding was encountered that was neither V1 or V2 schema. Cannot insert it.")
-            
+            update_record(db=db,finding=finding)
 
         logging.info(
             f"{len(valid_findings)}/{len(findings_data)} documents successfully processed from '{data_filename}'."
