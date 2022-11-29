@@ -162,21 +162,54 @@ def test_database_update():
 
     
     v1_finding = {'RVA ID': 'RV1234','NCATS ID': 'foo', "Severity": "Critical"}
-    v2_finding = {'RVA ID': 'RV1234','findings': [] }
-
+    v1_bad_finding = {'RVA ID': 'RV1234','NCATS ID': 'foo'}
+    v2_finding = {'RVA ID': 'RV4444','findings': [] }    
+    v2_bad_finding = {'RVA ID': 'RV4444'}
+    nonsense_finding = {'Peanut Butter': "Jelly"}
     fake_db = Mock()
     fake_db.findings.find_one_and_update = MagicMock(return_value=None)
 
+    # test bad values first since they result in no calls
+    with pytest.raises(ValueError):
+        fdi.update_record(db=fake_db,finding=nonsense_finding)
+    fake_db.findings.find_one_and_update.assert_not_called()
+
+    with pytest.raises(ValueError):
+        fdi.update_record(db=fake_db,finding=v1_bad_finding)
+    fake_db.findings.find_one_and_update.assert_not_called()
+
+
+    with pytest.raises(ValueError):
+        fdi.update_record(db=fake_db,finding=v2_bad_finding)
+    fake_db.findings.find_one_and_update.assert_not_called()
+
+
+
     fdi.update_record(db=fake_db,finding=v1_finding)
+
+  
+
     fake_db.findings.find_one_and_update.assert_called_with(
             {
                 "RVA ID": 'RV1234',
                 "NCATS ID": 'foo',
-                "Severity": "Critical",
+                "Severity": "Critical",                
             },
             {"$set": v1_finding},
             upsert=True,
     )
+    assert "schema" in v1_finding
+    assert v1_finding['schema'] == 'v1'
 
+    fdi.update_record(db=fake_db,finding=v2_finding)
+    fake_db.findings.find_one_and_update.assert_called_with(
+            {
+                "RVA ID": 'RV4444',              
+            },
+            {"$set": v2_finding},
+            upsert=True,
+    )
 
-    #set up a mocked database, and we'll check it's calls
+    assert "schema" in v2_finding
+    assert v2_finding['schema'] == 'v2'
+
