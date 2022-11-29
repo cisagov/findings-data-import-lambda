@@ -281,6 +281,19 @@ def setup_database_connection(
 def extract_findings(findings_data,field_map_dict):
     """
     Validate and return cleaned/processed finding
+
+    Parameters
+    ----------
+    findings_data : dict
+        The findings dictionary pulled from a findings JSON file
+
+    field_map_dict: dict
+        The dictionary of replacement rules for field names in findings_data
+
+    Returns
+    -------
+    list : A list of findings objects from findings_data that pass validation
+    
     """
     valid_findings = []
     # Iterate through data and save each record to the database
