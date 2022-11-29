@@ -278,6 +278,42 @@ def setup_database_connection(
     except Exception as err:
         raise Exception("Unable to connect to the mongo db", err).with_traceback()
 
+def extract_findings(findings_data,field_map_dict):
+    """
+    Validate and return cleaned/processed finding
+    """
+    valid_findings = []
+    # Iterate through data and save each record to the database
+    for index, finding in enumerate(findings_data):
+        # Replace or rename fields from replacement JSON
+        for field in field_map_dict:
+            if field in finding.keys():
+                if field_map_dict[field]:
+                    finding[field_map_dict[field]] = finding[field]
+                finding.pop(field, None)
+
+        # Get RVA ID in format DDDD([.-]D+) from the end of the "RVA ID" field.
+        rvaId = re.search(r"(\d{4})(?:[.-](\d+))?$", finding["RVA ID"])
+        if rvaId:
+            rID = f"RV{rvaId.group(1)}"
+            if rvaId.group(2) is not None:
+                rID += f".{rvaId.group(2)}"
+            finding["RVA ID"] = rID
+        else:
+            logging.warning(f"Skipping record {index}: Unable to extract valid RVA ID from '{finding['RVA ID']}")
+            continue
+        # Only process appropriate findings records.
+        if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
+            valid_findings.append(finding)
+        else:
+            logging.warning(
+                f"Skipping record {index}. Missing 'RVA ID' or 'NCATS ID' field."
+            )
+
+    logging.info(
+        f"{len(valid_findings)}/{len(findings_data)} documents successfully processed."
+    )
+
 
 def import_data(
     s3_bucket=None,
@@ -366,33 +402,14 @@ def import_data(
             db_hostname=db_hostname,
             db_port=db_port
         )
-
-
-        processed_findings = 0
-        # Iterate through data and save each record to the database
-        for index, finding in enumerate(findings_data):
-            # Replace or rename fields from replacement JSON
-            for field in field_map_dict:
-                if field in finding.keys():
-                    if field_map_dict[field]:
-                        finding[field_map_dict[field]] = finding[field]
-                    finding.pop(field, None)
-
-            # Get RVA ID in format DDDD([.-]D+) from the end of the "RVA ID" field.
-            rvaId = re.search(r"(\d{4})(?:[.-](\d+))?$", finding["RVA ID"])
-            if rvaId:
-                rID = f"RV{rvaId.group(1)}"
-                if rvaId.group(2) is not None:
-                    rID += f".{rvaId.group(2)}"
-                finding["RVA ID"] = rID
-            else:
-                logging.warning(f"Skipping record {index} of '{data_filename}: Unable to extract valid RVA ID from '{finding['RVA ID']}")
-                continue
-            # Only process appropriate findings records.
-            if "RVA ID" in finding.keys() and "NCATS ID" in finding.keys():
-                # If the finding already exists, update it with new data.
-                # Otherwise insert it as a new document (upsert=True).
-                db.findings.find_one_and_update(
+    
+        logging.info(f"Extracting/validating findings from {data_filename}")
+        valid_findings = extract_findings(
+            findings_data=findings_data,field_map_dict=field_map_dict
+        )
+        logging.info(f"Updating records")
+        for finding in valid_findings:
+             db.findings.find_one_and_update(
                     {
                         "RVA ID": finding["RVA ID"],
                         "NCATS ID": finding["NCATS ID"],
@@ -400,16 +417,10 @@ def import_data(
                     },
                     {"$set": finding},
                     upsert=True,
-                )
-
-                processed_findings += 1
-            else:
-                logging.warning(
-                    f"Skipping record {index} of '{data_filename}: Missing 'RVA ID' or 'NCATS ID' field."
-                )
+                )    
 
         logging.info(
-            f"{processed_findings}/{len(findings_data)} documents successfully processed from '{data_filename}'."
+            f"{len(valid_findings)}/{len(findings_data)} documents successfully processed from '{data_filename}'."
         )
 
         if save_succeeded:
