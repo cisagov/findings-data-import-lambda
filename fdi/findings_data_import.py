@@ -307,15 +307,15 @@ def extract_findings(findings_data,field_map_dict):
         if not finding or not hasattr(finding,"keys"):
             logging.warning("Received an empty of invalid finding object, skipping.")
             continue
-    
+
         # Replace or rename fields from replacement JSON
         for field in field_map_dict:
             if field in finding.keys():
                 if field_map_dict[field]:
                     finding[field_map_dict[field]] = finding[field]
                 finding.pop(field, None)
-        
-        
+
+
         #work with v1 and v2. If has NCATS ID  OR findings the document is probably OK
         if not "RVA ID" in finding.keys() or (
             not ("NCATS ID" in finding.keys() and "Severity" in finding.keys()) and not "findings" in finding.keys()
@@ -335,7 +335,7 @@ def extract_findings(findings_data,field_map_dict):
         else:
             logging.warning(f"Skipping record {index}: Unable to extract valid RVA ID from '{finding['RVA ID']}")
             continue
-        
+
         valid_findings.append(finding)
 
     logging.info(
@@ -357,7 +357,7 @@ def update_record(
         The database to update
 
     finding: dict
-        The finding data to insert. 
+        The finding data to insert.
 
     """
 
@@ -376,19 +376,19 @@ def update_record(
             {"$set": finding},
             upsert=True,
         )
-    #'v2' record has a findings collection and is one record per RVA ID 
+    #'v2' record has a findings collection and is one record per RVA ID
     elif "findings" in finding:
         finding['schema'] = 'v2'
         db.findings.find_one_and_update(
             {
-                "RVA ID": finding["RVA ID"],                    
+                "RVA ID": finding["RVA ID"],
             },
             {"$set": finding},
             upsert=True,
         )
     else:
-        raise ValueError("The passed finding was not identifiable as V1 or V2 schema")                        
-    
+        raise ValueError("The passed finding was not identifiable as V1 or V2 schema")
+
 
 def import_data(
     s3_bucket=None,
