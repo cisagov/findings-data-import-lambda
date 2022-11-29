@@ -293,7 +293,7 @@ def extract_findings(findings_data,field_map_dict):
     Returns
     -------
     list : A list of findings objects from findings_data that pass validation
-    
+
     """
     valid_findings = []
     # Iterate through data and save each record to the database
@@ -415,7 +415,7 @@ def import_data(
             db_hostname=db_hostname,
             db_port=db_port
         )
-    
+
         logging.info(f"Extracting/validating findings from {data_filename}")
         valid_findings = extract_findings(
             findings_data=findings_data,field_map_dict=field_map_dict
@@ -430,7 +430,7 @@ def import_data(
                     },
                     {"$set": finding},
                     upsert=True,
-                )    
+                )
 
         logging.info(
             f"{len(valid_findings)}/{len(findings_data)} documents successfully processed from '{data_filename}'."
