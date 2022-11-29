@@ -98,9 +98,25 @@ def test_basic_validation():
             None
         
     ]
-
+    # the valid finding should make it through and come out of extract_findings
     result = fdi.extract_findings(valid_findings,field_map_dict=basic_field_map)
     assert len(result) == 1
 
+    # none of the invalid should make it through
     result = fdi.extract_findings(invalid_findings,field_map_dict=basic_field_map)
     assert len(result) == 0
+
+    # combine both lists, and ensure only one output is received
+    combined_findings = valid_findings + invalid_findings
+    result = fdi.extract_findings(combined_findings,field_map_dict=basic_field_map)
+    assert len(result) == 1
+
+    #finally, test our sample json and expect 25 findings
+
+    with open("tests/artifacts/expected_dhs_v1.json","r") as json_file:
+        expected_findings = json.load(json_file)
+        result = fdi.extract_findings(findings_data=expected_findings,field_map_dict=basic_field_map)
+
+        # right now, this ingest tool ignores everything but the specific findings. Is this intentional?
+        assert len(result) == 5
+    
