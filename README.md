@@ -41,6 +41,12 @@ blank, the script will remove that JSON element from the record.
 }
 ```
 
+### Default Field Mapping File
+
+A default mapping file exists at  `tests/artifacts/field_map.json` and should be
+used as a starting point to be compatible with most versions of the Pen Test Portal's
+findings JSON output.
+
 ## Operational Note ##
 
 This script will attempt to extract the RVA ID from the `RVA ID` field in a record
