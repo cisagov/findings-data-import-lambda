@@ -110,7 +110,7 @@ def get_field_map(
     field_map=None
 ):
     """Read a JSON field map object from a s3 bucket, and return the field map dict
-        
+
     Parameters:
     -----------
     s3_client : S3.Client
@@ -148,15 +148,15 @@ def get_field_map(
         raise Exception(f"Unable to download the field map data {field_map} from {s3_bucket}",ce)
     except json.JSONDecodeError as je:
         raise Exception("Unable to decode field map data, does not appear to be valid JSON.",je)
-    
+
 
 def download_file(
     s3_client=None,
     s3_bucket=None,
     data_filename=None,
 ):
-    """Download a file from a specified s3 bucket, and place it in a temporary file path. 
-    
+    """Download a file from a specified s3 bucket, and place it in a temporary file path.
+
     Parameters:
     -----------
     s3_client : S3.Client
@@ -172,8 +172,8 @@ def download_file(
     Raises
     ------
 
-    Returns 
-    -------         
+    Returns
+    -------
         string, : The file path of the newly created temp file
         dict   : The JSON data dictionary loaded from downloaded file
     """
@@ -204,11 +204,11 @@ def setup_database_connection(
     db_port=None,
     ssm_db_name=None,
     ssm_db_user=None,
-    ssm_db_password=None,    
+    ssm_db_password=None,
 
-    
+
 ):
-    """Set up a mongo db connection based on the supplied host/port and 
+    """Set up a mongo db connection based on the supplied host/port and
     SSM key values.
 
 
@@ -272,9 +272,9 @@ def setup_database_connection(
         return db
     except ClientError as ce:
         raise Exception("Unable to fetch database credentials from the SSM", ce).with_traceback()
-    #Handle all mongo exceptions the same way.. 
-    except Exception as e: 
-        raise Exception("Unable to connect to the mongo db", e).with_traceback()        
+    #Handle all mongo exceptions the same way..
+    except Exception as e:
+        raise Exception("Unable to connect to the mongo db", e).with_traceback()
 
 
 def import_data(
@@ -336,7 +336,7 @@ def import_data(
     """
     # Boto3 clients for S3 and SSM
     s3_client = boto3_client("s3")
-    
+
 
     try:
         # This allows us to access keys with spaces in them. When they are passed
@@ -402,7 +402,7 @@ def import_data(
 
                 processed_findings += 1
             else:
-                logging.warning(f"Skipping record {index} of '{data_filename}: Missing 'RVA ID' or 'NCATS ID' field.")                
+                logging.warning(f"Skipping record {index} of '{data_filename}: Missing 'RVA ID' or 'NCATS ID' field.")
 
         logging.info(
             f"{processed_findings}/{len(findings_data)} documents successfully processed from '{data_filename}'."
