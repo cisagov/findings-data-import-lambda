@@ -296,6 +296,11 @@ def extract_findings(findings_data,field_map_dict):
 
     """
     valid_findings = []
+
+    # if we (v2) get a lone object, wrap it in a list for compatability
+    if type(findings_data) != list:
+        findings_data = [findings_data]
+
     # Iterate through data and save each record to the database
     for index, finding in enumerate(findings_data):
 
@@ -309,9 +314,12 @@ def extract_findings(findings_data,field_map_dict):
                 if field_map_dict[field]:
                     finding[field_map_dict[field]] = finding[field]
                 finding.pop(field, None)
-
-        #we have to check for existence before accessing RVA ID....
-        if not "RVA ID" in finding.keys() or not "NCATS ID" in finding.keys():
+        
+        
+        #work with v1 and v2. If has NCATS ID  OR findings the document is probably OK
+        if not "RVA ID" in finding.keys() or (
+            not "NCATS ID" in finding.keys() and not "findings" in finding.keys()
+            ):
             logging.warning(
                 f"Skipping record {index}. Missing 'RVA ID' or 'NCATS ID' field."
             )
