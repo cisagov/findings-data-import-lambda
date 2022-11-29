@@ -441,6 +441,7 @@ def import_data(
         for finding in valid_findings:
             # if it has "NCATS ID", it is 'v1' record
             if "NCATS ID" in finding:
+                finding['schema'] = 'v1'
                 db.findings.find_one_and_update(
                     {
                         "RVA ID": finding["RVA ID"],
@@ -452,6 +453,7 @@ def import_data(
                 )
             #'v2' record has a findings collection and is one record per RVA ID 
             elif "findings" in finding:
+                finding['schema'] = 'v2'
                 db.findings.find_one_and_update(
                     {
                         "RVA ID": finding["RVA ID"],                    
