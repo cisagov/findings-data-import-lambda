@@ -144,10 +144,10 @@ def get_field_map(
         logging.debug(f"Configuration data: {field_map_dict}")
 
         return field_map_dict
-    except ClientError as ce:
-        raise Exception(f"Unable to download the field map data {field_map} from {s3_bucket}",ce)
-    except json.JSONDecodeError as je:
-        raise Exception("Unable to decode field map data, does not appear to be valid JSON.",je)
+    except ClientError as client_err:
+        raise Exception(f"Unable to download the field map data {field_map} from {s3_bucket}",client_err)
+    except json.JSONDecodeError as json_err:
+        raise Exception("Unable to decode field map data, does not appear to be valid JSON.",json_err)
 
 
 def download_file(
@@ -193,10 +193,12 @@ def download_file(
 
         logging.info(f"JSON data loaded from {data_filename}.")
         return temp_data_filepath, findings_data
-    except json.JSONDecodeError as je:
-        raise(Exception(f"Unable to decode JSON data for {data_filename}",e).with_traceback())
-    except ClientError as e:
-        raise(Exception(f"Error downloading file {data_filename} from {s3_bucket} ",e).with_traceback())
+    except json.JSONDecodeError as json_err:
+        raise(Exception(f"Unable to decode JSON data for {data_filename}",json_err).with_traceback())
+    except ClientError as err:
+        raise(Exception(
+            f"Error downloading file {data_filename} from {s3_bucket} ",err).with_traceback()
+        )
 
 
 def setup_database_connection(
@@ -270,11 +272,11 @@ def setup_database_connection(
             f"DB connection set up to {db_hostname}:{db_port}/{db_info['db_name']}"
         )
         return db
-    except ClientError as ce:
-        raise Exception("Unable to fetch database credentials from the SSM", ce).with_traceback()
+    except ClientError as client_err:
+        raise Exception("Unable to fetch database credentials from the SSM", client_err).with_traceback()
     #Handle all mongo exceptions the same way..
-    except Exception as e:
-        raise Exception("Unable to connect to the mongo db", e).with_traceback()
+    except Exception as err:
+        raise Exception("Unable to connect to the mongo db", err).with_traceback()
 
 
 def import_data(
@@ -402,7 +404,9 @@ def import_data(
 
                 processed_findings += 1
             else:
-                logging.warning(f"Skipping record {index} of '{data_filename}: Missing 'RVA ID' or 'NCATS ID' field.")
+                logging.warning(
+                    f"Skipping record {index} of '{data_filename}: Missing 'RVA ID' or 'NCATS ID' field."
+                )
 
         logging.info(
             f"{processed_findings}/{len(findings_data)} documents successfully processed from '{data_filename}'."
