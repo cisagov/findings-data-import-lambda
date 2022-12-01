@@ -1,10 +1,25 @@
 # findings-data-import-lambda ƛ #
 
+<<<<<<< HEAD
 [![GitHub Build Status](https://github.com/cisagov/findings-data-import-lambda/workflows/build/badge.svg)](https://github.com/cisagov/findings-data-import-lambda/actions)
 [![Coverage Status](https://coveralls.io/repos/github/cisagov/findings-data-import-lambda/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/findings-data-import-lambda?branch=develop)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/context:python)
 [![Known Vulnerabilities](https://snyk.io/test/github/cisagov/findings-data-import-lambda/develop/badge.svg)](https://snyk.io/test/github/cisagov/findings-data-import-lambda)
+=======
+## ⚠ Notice ⚠ ##
+
+This project has been deprecated. A replacement project using a more modern
+approach can be found at [cisagov/skeleton-aws-lambda-python](https://github.com/cisagov/skeleton-aws-lambda-python).
+If you need to create AWS Lambdas using Python runtimes please base your project
+on that skeleton.
+
+[![GitHub Build Status](https://github.com/cisagov/skeleton-aws-lambda/workflows/build/badge.svg)](https://github.com/cisagov/skeleton-aws-lambda/actions)
+[![Coverage Status](https://coveralls.io/repos/github/cisagov/skeleton-aws-lambda/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/skeleton-aws-lambda?branch=develop)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/skeleton-aws-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/skeleton-aws-lambda/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/skeleton-aws-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/skeleton-aws-lambda/context:python)
+[![Known Vulnerabilities](https://snyk.io/test/github/cisagov/skeleton-aws-lambda/develop/badge.svg)](https://snyk.io/test/github/cisagov/skeleton-aws-lambda)
+>>>>>>> d2561c411f66c6477d7a3932860d98bc519b31e8
 
 `findings-data-import-lambda` contains code to build an AWS Lambda function
 that reads findings data from a JSON file in an S3 bucket and imports it
