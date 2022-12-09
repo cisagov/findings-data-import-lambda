@@ -1,25 +1,10 @@
 # findings-data-import-lambda ƛ #
 
 [![GitHub Build Status](https://github.com/cisagov/findings-data-import-lambda/workflows/build/badge.svg)](https://github.com/cisagov/findings-data-import-lambda/actions)
-[![Coverage Status](https://coveralls.io/repos/github/cisagov/findings-data-import-lambda/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/findings-data-import-lambda?branch=develop)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/alerts/)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/findings-data-import-lambda.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/findings-data-import-lambda/context:python)
-[![Known Vulnerabilities](https://snyk.io/test/github/cisagov/findings-data-import-lambda/develop/badge.svg)](https://snyk.io/test/github/cisagov/findings-data-import-lambda)
 
 `findings-data-import-lambda` contains code to build an AWS Lambda function
 that reads findings data from a JSON file in an S3 bucket and imports it
 into a database.
-
-## Example ##
-
-Building the AWS Lambda zip file:
-
-```console
-cd ~/cisagov/findings-data-import-lambda
-docker-compose down
-docker-compose build
-docker-compose up
-```
 
 ## Field Mapping ##
 
@@ -48,13 +33,67 @@ after field mapping has taken place. It expects the ID found to end in the forma
 `DDDD`, but allows an increment such that `0123.4` is valid. However, the matched
 ID is reduced to the four leading digits in this case.
 
-## Docker Note ##
+## Building the base Lambda image ##
 
-Please note that the corresponding Docker image _must_ be rebuilt
-locally if the script `build.sh` changes.  Given that rebuilding the Docker
-image is very fast (due to Docker's caching) if the script has not changed, it
-is a very good idea to _always_ run the `docker-compose build` step when
-using this tool.
+The base Lambda image can be built with the following command:
+
+```console
+docker compose build
+```
+
+This base image is used both to build a deployment package and to run the
+Lambda locally.
+
+## Building a deployment package ##
+
+You can build a deployment zip file to use when creating a new AWS Lambda
+function with the following command:
+
+```console
+docker compose up build_deployment_package
+```
+
+This will output the deployment zip file in the root directory.
+
+## Running the Lambda locally ##
+
+The configuration in this repository allows you run the Lambda locally for
+testing as long as you do not need explicit permissions for other AWS
+services. This can be done with the following command:
+
+```console
+docker compose up --detach run_lambda_locally
+```
+
+You can then invoke the Lambda using the following:
+
+```console
+ curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+```
+
+The `{}` in the command is the invocation event payload to send to the Lambda
+and would be the value given as the `event` argument to the handler.
+
+Once you are finished you can stop the detached container with the following command:
+
+```console
+docker compose down
+```
+
+## How to update Python dependencies ##
+
+The Python dependencies are maintained using a [Pipenv](https://github.com/pypa/pipenv)
+configuration for each supported Python version. Changes to requirements
+should be made to the respective `src/py<Python version>/Pipfile`. More
+information about the `Pipfile` format can be found [here](https://pipenv.pypa.io/en/latest/basics/#example-pipfile-pipfile-lock).
+The accompanying `Pipfile.lock` files contain the specific dependency versions
+that will be installed. These files can be updated like so (using the Python
+3.9 configuration as an example):
+
+```console
+cd src/py3.9
+pipenv lock
+```
 
 ## Contributing ##
 
