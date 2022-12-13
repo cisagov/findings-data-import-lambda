@@ -1,108 +1,109 @@
-"""Simple AWS Lambda handler to verify functionality."""
+"""Simple AWS Lambda handler to get environment variables and start the import.
+
+This Lambda function expects the following environment variables to be
+defined:
+ 1. s3_bucket - The AWS S3 bucket containing the data file.
+ 2. file_suffix - The suffix that a triggering key from the bucket above should
+    have to be processed by this lambda.
+ 3. field_map - The AWS S3 object key in the above bucket that stores the JSON
+    containing the rules for mapping fields of input data to the fields in the
+    database.
+ 4. db_hostname - The hostname for the database that will store the processed
+    data.
+ 5. db_port - The port that the database is listening on at the above hostname.
+ 6. save_failed - A boolean value specifying if inputs that error should be
+    retained.
+ 7. save_succeeded - A boolean value specifying if inputs that succeed should be
+    retained.
+ 8. ssm_db_name - The name of the parameter in AWS SSM Parameter Store that holds the
+    name of the database that stored the processed data.
+ 9. ssm_db_user - The name of the parameter in AWS SSM Parameter Store that holds the
+    database username with write permission to the above database.
+10. ssm_db_password - The name of the parameter in AWS SSM Parameter Store that holds
+    the password for the above database user.
+"""
 
 # Standard Python Libraries
-from datetime import datetime, timezone
+import json
 import logging
-from typing import Any, Optional, Union
-
-# Third-Party Libraries
-import cowsay
-import cowsay.characters
+import os
 
 # cisagov Libraries
-from example import example_div
+from findings_data_import import import_data
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def failed_task(result: dict[str, Any], error_msg: str) -> None:
-    """Update a given result because of a failure during processing."""
-    result["success"] = False
-    result["error_message"] = error_msg
-
-
-def task_default(event):
-    """Provide a result if no valid task was provided."""
-    result = {}
-    error_msg = 'Provided task "%s" is not supported.'
-
-    task = event.get("task", None)
-    logging.error(error_msg, task)
-    failed_task(result, error_msg % task)
-
-    return result
-
-
-def task_cowsay(event) -> dict[str, Union[Optional[str], bool]]:
-    """Generate an output message using the provided information."""
-    result: dict[str, Union[Optional[str], bool]] = {"message": None, "success": True}
-
-    character: str = event.get("character", "tux")
-    if character not in cowsay.characters.CHARS.keys():
-        error_msg = 'Character "%s" is not valid.'
-        logging.error(error_msg, character)
-        failed_task(result, error_msg % character)
-    else:
-        contents: str = event.get("contents", "Hello from AWS Lambda!")
-        logger.info(
-            'Creating output using "%s" with contents "%s"', character, contents
-        )
-        result["message"] = cowsay.get_output_string(character, contents)
-
-    return result
-
-
-def task_divide(event) -> dict[str, Union[Optional[float], bool]]:
-    """Divide one number by another and provide the result."""
-    result: dict[str, Union[Optional[float], bool]] = {"result": None, "success": True}
-    numerator: str = event.get("numerator", None)
-    denominator: str = event.get("denominator", None)
-
-    if denominator is None or numerator is None:
-        error_msg = "Request must include both a numerator and a denominator."
-        logging.error(error_msg)
-        failed_task(result, error_msg)
-    else:
-        try:
-            variable_error_msg = "numerator: %s, denominator: %s"
-            result["result"] = example_div(int(numerator), int(denominator))
-        except ValueError:
-            error_msg = "The provided values must be integers."
-            logging.error(error_msg)
-            logging.error(variable_error_msg, numerator, denominator)
-            failed_task(result, error_msg)
-        except ZeroDivisionError:
-            error_msg = "The denominator cannot be zero."
-            logging.error(error_msg)
-            logging.error(variable_error_msg, numerator, denominator)
-            failed_task(result, error_msg)
-
-    return result
-
-
-def handler(event, context) -> dict[str, Optional[str]]:
+def handler(event, context) -> None:
     """Process the event and generate a response.
 
-    The event should have a task member that is one of the supported tasks.
+    The event should be an "ObjectCreated:Put" event with source S3 bucket and object
+    key data matching the configuration for this lambda.
 
     :param event: The event dict that contains the parameters sent when the function
                   is invoked.
     :param context: The context in which the function is called.
     :return: The result of the action.
     """
-    response: dict[str, Optional[str]] = {"timestamp": str(datetime.now(timezone.utc))}
+    logging.debug("AWS Event was: %s", json.dumps(event))
 
-    task_name = f"task_{event.get('task')}"
-    task = globals().get(task_name, task_default)
+    expected_event = "ObjectCreated:Put"
 
-    result: dict[str, Any]
-    if not callable(task):
-        logging.error("Provided task is not a callable.")
-        logging.error(task)
-        result = task_default(event)
+    # Get info in the S3 event notification message from
+    # the parent Lambda function.
+    record = event["Records"][0]
+
+    object_key = record["s3"]["object"]["key"]
+
+    # Retrieve environment variables
+    s3_bucket = os.environ["s3_bucket"]
+    object_suffix = os.environ["file_suffix"]
+    field_map = os.environ["field_map"]
+    save_failed = os.environ["save_failed"].lower() == "true"
+    save_succeeded = os.environ["save_succeeded"].lower() == "true"
+
+    database_host = os.environ["db_hostname"]
+    database_port = os.environ["db_port"]
+
+    ssm_db_name = os.environ["ssm_db_name"]
+    ssm_db_username = os.environ["ssm_db_user"]
+    ssm_db_password = os.environ["ssm_db_password"]
+
+    # Verify event has correct eventName
+    if record["eventName"] == expected_event:
+        source_bucket = record["s3"]["bucket"]["name"]
+        object_key = record["s3"]["object"]["key"]
+
+        # Verify the source bucket and triggering object suffix
+        if source_bucket == s3_bucket:
+            if object_key.endswith(object_suffix):
+                import_data(
+                    s3_bucket=s3_bucket,
+                    data_filename=object_key,
+                    db_hostname=database_host,
+                    db_port=database_port,
+                    field_map=field_map,
+                    save_failed=save_failed,
+                    save_succeeded=save_succeeded,
+                    ssm_db_name=ssm_db_name,
+                    ssm_db_user=ssm_db_username,
+                    ssm_db_password=ssm_db_password,
+                )
+            else:
+                logging.warning(
+                    'Object key "%s" does not end with required suffix "%s"',
+                    object_key,
+                    object_suffix,
+                )
+        else:
+            logging.warning(
+                'Expected "%s" event from S3 bucket "%s" but received event from S3 bucket "%s"',
+                expected_event,
+                s3_bucket,
+                source_bucket,
+            )
+            logging.warning("Full AWS event: %s", json.dumps(event))
     else:
-        result = task(event)
-
-    response.update(result)
-    return response
+        logging.warning("Unexpected eventName received: %s", record["eventName"])
+        logging.warning("Full AWS event: %s", json.dumps(event))
