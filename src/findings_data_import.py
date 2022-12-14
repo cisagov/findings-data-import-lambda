@@ -49,9 +49,12 @@ def move_processed_file(s3_client, bucket, folder, filename):
         logging.error("Error: %s", delete_error)
 
 
-def skip_record(index, file, message):
+def skip_record(index, file, format_string="", *args):
     """Print a standard message when a record must be skipped."""
-    logging.warning('Skipping record %d of "%s": %s', index, file, message)
+    log_format = 'Skipping record %d of "%s"' + (
+        f": {format_string}" if format_string else ""
+    )
+    logging.warning(log_format, index, file, *args)
 
 
 def import_data(
@@ -199,7 +202,8 @@ def import_data(
                 skip_record(
                     index,
                     data_filename,
-                    f'Unable to extract valid RVA ID from "{finding["RVA ID"]}"',
+                    'Unable to extract valid RVA ID from "%s"',
+                    finding["RVA ID"],
                 )
                 continue
             # Only process appropriate findings records.
