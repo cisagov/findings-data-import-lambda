@@ -2,41 +2,6 @@
 
 The source data is a JSON file stored in an AWS S3 bucket.
 The destination of the data is a Mongo database.
-
-Usage:
-  findings_data_import --s3-bucket=BUCKET --data-filename=FILE --db-hostname=HOST --field-map=MAP --ssm-db-name=DB --ssm-db-user=USER --ssm-db-password=PASSWORD [--save-failed=FAILED] [--save-succeeded=SUCCEEDED] [--db-port=PORT] [--log-level=LEVEL]
-  findings_data_import (-h | --help)
-
-Options:
-  -h --help                   Show this message.
-  --s3-bucket=BUCKET          The AWS S3 bucket containing the data
-                              file.
-  --data-filename=FILE        The name of the file containing the
-                              data in the S3 bucket above.
-  --db-hostname=HOST          The hostname that has the database to store
-                              the data in.
-  --db-port=PORT              The port that the database server is
-                              listening on. [default: 27017]
-  --field-map=MAP             The S3 key for the JSON file containing a map of
-                              incoming field names to what they should be for
-                              the database.
-  --save-failed=FAILED        The directory name used for storing unsuccessfully
-                              processed files. [default: True]
-  --save-succeeded=SUCCEEDED  The directory name used for storing successfully
-                              processed files. [default: False]
-  --ssm-db-name=DB            The name of the parameter in AWS SSM that holds
-                              the name of the database to store the assessment
-                              data in.
-  --ssm-db-user=USER          The name of the parameter in AWS SSM that holds
-                              the database username with write permission to
-                              the assessment database.
-  --ssm-db-password=PASSWORD  The name of the parameter in AWS SSM that holds
-                              the database password for the user with write
-                              permission to the assessment database.
-  --log-level=LEVEL           If specified, then the log level will be set to
-                              the specified value.  Valid values are "debug",
-                              "info", "warning", "error", and "critical".
-                              [default: warning]
 """
 
 # Standard Python Libraries
@@ -51,30 +16,10 @@ import urllib.parse
 # Third-Party Libraries
 from boto3 import client as boto3_client
 from botocore.exceptions import ClientError
-import docopt
 from pymongo import MongoClient
-
-# cisagov Libraries
-from fdi import __version__
 
 SUCCEEDED_FOLDER = "success"
 FAILED_FOLDER = "failed"
-
-
-def setup_logging(log_level):
-    """Set up logging at the provided level."""
-    try:
-        logging.basicConfig(
-            format="%(asctime)-15s %(levelname)s %(message)s", level=log_level.upper()
-        )
-    except ValueError:
-        logging.critical(
-            f'"{log_level}" is not a valid logging level.  Possible values '
-            "are debug, info, warning, error, and critical."
-        )
-        return 1
-
-    return 0
 
 
 def move_processed_file(s3_client, bucket, folder, filename):
@@ -296,30 +241,3 @@ def import_data(
         )
 
     return True
-
-
-def main() -> int:
-    """Set up logging and call the import_data function."""
-    # Parse command line arguments
-    args = docopt.docopt(__doc__, version=__version__)
-
-    # Set up logging
-    setup_logging(args["--log-level"])
-
-    result = import_data(
-        args["--s3-bucket"],
-        args["--data-filename"],
-        args["--db-hostname"],
-        args["--db-port"],
-        args["--field-map"],
-        args["--save-failed"],
-        args["--save-succeeded"],
-        args["--ssm-db-name"],
-        args["--ssm-db-user"],
-        args["--ssm-db-password"],
-    )
-
-    # Stop logging and clean up
-    logging.shutdown()
-
-    return 0 if result else -1
