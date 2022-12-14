@@ -31,13 +31,7 @@ FROM amazon/aws-lambda-python:$PY_VERSION as build-stage
 # For a list of pre-defined annotation keys and value types see:
 # https://github.com/opencontainers/image-spec/blob/master/annotations.md
 ###
-# github@cisa.dhs.gov is a very generic email distribution, and it is
-# unlikely that anyone on that distribution is familiar with the
-# particulars of your repository.  It is therefore *strongly*
-# suggested that you use an email address here that is specific to the
-# person or group that maintains this repository; for example:
-# LABEL org.opencontainers.image.authors="vm-fusion-dev-group@trio.dhs.gov"
-LABEL org.opencontainers.image.authors="github@cisa.dhs.gov"
+LABEL org.opencontainers.image.authors="vm-fusion-dev-group@trio.dhs.gov"
 LABEL org.opencontainers.image.vendor="Cybersecurity and Infrastructure Security Agency"
 
 # Declare it a third time so it's brought into this scope.
@@ -50,8 +44,8 @@ COPY --from=install-stage ${LAMBDA_TASK_ROOT} ${LAMBDA_TASK_ROOT}
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 
-# Copy in the handler.
-COPY src/lambda_handler.py .
+# Copy in the handler and core logic.
+COPY src/lambda_handler.py src/findings_data_import.py .
 
 # Ensure our handler is invoked when the image is used.
 CMD ["lambda_handler.handler"]
