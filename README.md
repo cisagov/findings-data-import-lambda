@@ -6,18 +6,19 @@
 that reads findings data from a JSON file in an S3 bucket and imports it
 into a database.
 
-## Field Mapping ##
+## Field mapping ##
 
-The `--field-map` flag is leveraged to dynamically tell the script which fields
-to remove and/or change. As the input JSON structure changes, the script is
-capable of adapting to new or changing field name requirements. In the JSON
-file it follows a key/value methodology, where the key is the original field
-name (designated by the "field_to_replace" field in the example below) to find
-in the input JSON and the value (designated by the "value_to_replace_field_with"
-field in the example below) is the new field name desired. If the value is
-blank, the script will remove that JSON element from the record.
+The Lambda supports using a field map configuration JSON in S3 (object key
+provided to the Lambda as the `field_map` environment variable) to dynamically
+tell the script which fields to remove and/or change. As the input JSON
+structure changes the script is capable of adapting to new or changing field
+name requirements. The JSON file is a simple dictionary, where each key is the
+original field name (designated by `"field_to_replace"` in the example below)
+to find in the input JSON and the value (designated by `"value_to_replace_field_with"`
+in the example below) is the new field name desired. If the value is empty the
+script will remove that element from the record.
 
-### Example Field Map JSON File ###
+### Example field map JSON file ###
 
 ```json
 {
@@ -26,7 +27,7 @@ blank, the script will remove that JSON element from the record.
 }
 ```
 
-## Operational Note ##
+## Operational note ##
 
 This script will attempt to extract the RVA ID from the `RVA ID` field in a record
 after field mapping has taken place. It expects the ID found to end in the format
