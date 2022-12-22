@@ -2,41 +2,6 @@
 
 The source data is a JSON file stored in an AWS S3 bucket.
 The destination of the data is a Mongo database.
-
-Usage:
-  findings_data_import --s3-bucket=BUCKET --data-filename=FILE --db-hostname=HOST --field-map=MAP --ssm-db-name=DB --ssm-db-user=USER --ssm-db-password=PASSWORD [--save-failed=FAILED] [--save-succeeded=SUCCEEDED] [--db-port=PORT] [--log-level=LEVEL]
-  findings_data_import (-h | --help)
-
-Options:
-  -h --help                   Show this message.
-  --s3-bucket=BUCKET          The AWS S3 bucket containing the data
-                              file.
-  --data-filename=FILE        The name of the file containing the
-                              data in the S3 bucket above.
-  --db-hostname=HOST          The hostname that has the database to store
-                              the data in.
-  --db-port=PORT              The port that the database server is
-                              listening on. [default: 27017]
-  --field-map=MAP             The S3 key for the JSON file containing a map of
-                              incoming field names to what they should be for
-                              the database.
-  --save-failed=FAILED        The directory name used for storing unsuccessfully
-                              processed files. [default: True]
-  --save-succeeded=SUCCEEDED  The directory name used for storing successfully
-                              processed files. [default: False]
-  --ssm-db-name=DB            The name of the parameter in AWS SSM that holds
-                              the name of the database to store the assessment
-                              data in.
-  --ssm-db-user=USER          The name of the parameter in AWS SSM that holds
-                              the database username with write permission to
-                              the assessment database.
-  --ssm-db-password=PASSWORD  The name of the parameter in AWS SSM that holds
-                              the database password for the user with write
-                              permission to the assessment database.
-  --log-level=LEVEL           If specified, then the log level will be set to
-                              the specified value.  Valid values are "debug",
-                              "info", "warning", "error", and "critical".
-                              [default: warning]
 """
 
 # Standard Python Libraries
@@ -51,30 +16,10 @@ import urllib.parse
 # Third-Party Libraries
 from boto3 import client as boto3_client
 from botocore.exceptions import ClientError
-import docopt
 from pymongo import MongoClient
-
-# cisagov Libraries
-from fdi import __version__
 
 SUCCEEDED_FOLDER = "success"
 FAILED_FOLDER = "failed"
-
-
-def setup_logging(log_level):
-    """Set up logging at the provided level."""
-    try:
-        logging.basicConfig(
-            format="%(asctime)-15s %(levelname)s %(message)s", level=log_level.upper()
-        )
-    except ValueError:
-        logging.critical(
-            f'"{log_level}" is not a valid logging level.  Possible values '
-            "are debug, info, warning, error, and critical."
-        )
-        return 1
-
-    return 0
 
 
 def move_processed_file(s3_client, bucket, folder, filename):
@@ -90,22 +35,26 @@ def move_processed_file(s3_client, bucket, folder, filename):
             Bucket=bucket, CopySource={"Bucket": bucket, "Key": filename}, Key=key
         )
         logging.info(
-            f"Successfully copied '{filename}' to directory '{folder}' as '{new_filename}'."
+            'Successfully copied "%s" to directory "%s" as "%s"',
+            filename,
+            folder,
+            new_filename,
         )
 
         # Delete the original object.
         s3_client.delete_object(Bucket=bucket, Key=filename)
-        logging.info(f"Successfully deleted original '{filename}'.")
+        logging.info('Successfully deleted original "%s"', filename)
     except ClientError as delete_error:
-        logging.error(
-            f"Failed while moving '{filename}' to '{folder}' directory."
-            f"Error: {delete_error}"
-        )
+        logging.error('Failed while moving "%s" to "%s" directory', filename, folder)
+        logging.error("Error: %s", delete_error)
 
 
-def skip_record(index, file, message):
+def skip_record(index, file, format_string="", *args):
     """Print a standard message when a record must be skipped."""
-    logging.warning(f"Skipping record {index} of '{file}': {message}.")
+    log_format = 'Skipping record %d of "%s"' + (
+        f": {format_string}" if format_string else ""
+    )
+    logging.warning(log_format, index, file, *args)
 
 
 def import_data(
@@ -181,7 +130,7 @@ def import_data(
         # in https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
         # under the section "Characters That Might Require Special Handling".
         data_filename = urllib.parse.unquote_plus(data_filename)
-        logging.info(f"Retrieving {data_filename}...")
+        logging.info("Retrieving %s...", data_filename)
 
         # Fetch findings data file from S3 bucket
         s3_client.download_file(
@@ -195,14 +144,14 @@ def import_data(
         field_map_dict = json.loads(
             field_map_object.get("Body", "{}").read().decode("utf-8")
         )
-        logging.info(f"Configuration data loaded from {field_map}")
-        logging.debug(f"Configuration data: {field_map_dict}")
+        logging.info("Configuration data loaded from %s", field_map)
+        logging.debug("Configuration data: %s", field_map_dict)
 
         # Load data JSON
         with open(temp_data_filepath) as data_json_file:
             findings_data = json.load(data_json_file)
 
-        logging.info(f"JSON data loaded from {data_filename}.")
+        logging.info("JSON data loaded from %s", data_filename)
 
         # Fetch database credentials from AWS SSM
         db_info = dict()
@@ -229,7 +178,7 @@ def import_data(
         )
         db = db_connection[db_info["db_name"]]
         logging.info(
-            f"DB connection set up to {db_hostname}:{db_port}/{db_info['db_name']}"
+            "DB connection set up to %s:%s/%s", db_hostname, db_port, db_info["db_name"]
         )
 
         processed_findings = 0
@@ -253,7 +202,8 @@ def import_data(
                 skip_record(
                     index,
                     data_filename,
-                    f"Unable to extract valid RVA ID from '{finding['RVA ID']}'",
+                    'Unable to extract valid RVA ID from "%s"',
+                    finding["RVA ID"],
                 )
                 continue
             # Only process appropriate findings records.
@@ -273,17 +223,20 @@ def import_data(
                 processed_findings += 1
             else:
                 skip_record(
-                    index, data_filename, "Missing 'RVA ID' or 'NCATS ID' field"
+                    index, data_filename, 'Missing "RVA ID" or "NCATS ID" field'
                 )
 
         logging.info(
-            f"{processed_findings}/{len(findings_data)} documents successfully processed from '{data_filename}'."
+            '%d/%d documents successfully processed from "%s"',
+            processed_findings,
+            len(findings_data),
+            data_filename,
         )
 
         if save_succeeded:
             move_processed_file(s3_client, s3_bucket, SUCCEEDED_FOLDER, data_filename)
     except Exception as err:
-        logging.error(f"Error Message {type(err)}: {err}")
+        logging.error("Error Message %s: %s", type(err), err)
 
         if save_failed:
             move_processed_file(s3_client, s3_bucket, FAILED_FOLDER, data_filename)
@@ -292,34 +245,7 @@ def import_data(
         # any exceptions were thrown in the try block above
         os.remove(temp_data_filepath)
         logging.info(
-            f"Deleted working copy of '{data_filename}' from local filesystem."
+            'Deleted working copy of "%s" from local filesystem', data_filename
         )
 
     return True
-
-
-def main() -> int:
-    """Set up logging and call the import_data function."""
-    # Parse command line arguments
-    args = docopt.docopt(__doc__, version=__version__)
-
-    # Set up logging
-    setup_logging(args["--log-level"])
-
-    result = import_data(
-        args["--s3-bucket"],
-        args["--data-filename"],
-        args["--db-hostname"],
-        args["--db-port"],
-        args["--field-map"],
-        args["--save-failed"],
-        args["--save-succeeded"],
-        args["--ssm-db-name"],
-        args["--ssm-db-user"],
-        args["--ssm-db-password"],
-    )
-
-    # Stop logging and clean up
-    logging.shutdown()
-
-    return 0 if result else -1

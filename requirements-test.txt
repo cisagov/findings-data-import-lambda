@@ -1,2 +1,3 @@
---editable .[test]
 --requirement requirements.txt
+pre-commit
+pytest

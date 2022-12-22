@@ -3,12 +3,9 @@
 # See: https://git-scm.com/docs/gitignore
 
 ## Project Specific ##
-findings-data-import.zip
+lambda_build.zip
 
 ## Python ##
 __pycache__
-.coverage
 .mypy_cache
-.pytest_cache
 .python-version
-*.egg-info
