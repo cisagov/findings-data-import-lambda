@@ -135,7 +135,7 @@ def setup_database_connection(
     database : A database object returned from the MongoClient
     """
     try:
-        logging.info(f"Grabbing database credentials from SSM.")
+        logging.info("Grabbing database credentials from SSM.")
         # Fetch database credentials from AWS SSM
         ssm_client = boto3_client("ssm")
 
@@ -267,9 +267,9 @@ def extract_findings(findings_data, field_map_dict):
                 finding.pop(field, None)
 
         # work with v1 and v2. If has NCATS ID  OR findings the document is probably OK
-        if not "RVA ID" in finding.keys() or (
+        if "RVA ID" not in finding.keys() or (
             not ("NCATS ID" in finding.keys() and "Severity" in finding.keys()
-                 ) and not "findings" in finding.keys()
+                 ) and "findings" not in finding.keys()
         ):
             logging.warning(
                 f"Skipping record {index}. Missing 'RVA ID' or 'NCATS ID' field."
@@ -309,9 +309,9 @@ def update_record(
         The database to update
 
     finding: dict
-        The finding data to insert.
+        The finding data to insert.1
     """
-    if not "RVA ID" in finding:
+    if "RVA ID" not in finding:
         raise ValueError("The passed finding had no RVA ID field.")
 
     # if it has "NCATS ID", it is 'v1' record
@@ -412,11 +412,6 @@ def import_data(
         data_filename = urllib.parse.unquote_plus(data_filename)
         logging.info("Retrieving %s...", data_filename)
 
-        # Fetch findings data file from S3 bucket
-        s3_client.download_file(
-            Bucket=s3_bucket, Key=data_filename, Filename=temp_data_filepath
-        )
-
         # Download the data file into a temporary location
         temp_data_filepath, findings_data = download_file(
             s3_client=s3_client, s3_bucket=s3_bucket, data_filename=data_filename
@@ -439,7 +434,7 @@ def import_data(
         valid_findings = extract_findings(
             findings_data=findings_data, field_map_dict=field_map_dict
         )
-        logging.info(f"Updating records")
+        logging.info("Updating records")
         for finding in valid_findings:
             update_record(db=db, finding=finding)
 
