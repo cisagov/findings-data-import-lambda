@@ -32,7 +32,7 @@ in the input JSON and the value (designated by the "value_to_replace_field_with"
 field in the example below) is the new field name desired. If the value is
 blank, the script will remove that JSON element from the record.
 
-### Example Field Map JSON File ###
+## Example Field Map JSON File ##
 
 ```json
 {
@@ -41,9 +41,9 @@ blank, the script will remove that JSON element from the record.
 }
 ```
 
-### Default Field Mapping File
+## Default Field Mapping File ##
 
-A default mapping file exists at  `tests/artifacts/field_map.json` and should be
+A default mapping file exists at `tests/artifacts/field_map.json` and should be
 used as a starting point to be compatible with most versions of the Pen Test Portal's
 findings JSON output.
 
@@ -56,10 +56,10 @@ ID is reduced to the four leading digits in this case.
 
 ## Docker Note ##
 
-Please note that the corresponding Docker image _must_ be rebuilt
+Please note that the corresponding Docker image *must* be rebuilt
 locally if the script `build.sh` changes.  Given that rebuilding the Docker
 image is very fast (due to Docker's caching) if the script has not changed, it
-is a very good idea to _always_ run the `docker-compose build` step when
+is a very good idea to *always* run the `docker-compose build` step when
 using this tool.
 
 ## Contributing ##
