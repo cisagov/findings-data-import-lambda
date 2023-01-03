@@ -1,0 +1,250 @@
+[
+  {
+    "Assessment Type": "Internal",
+    "CIS_CSC": "",
+    "CMMC": "AC.2.008, AC.3.018, IA.3.083",
+    "Date Generated": "11/03/22",
+    "NCATS ID": "17",
+    "NIST_800_53": "AC-2, AT-3, IA-1, IA-10, IA-11, IA-2, IA-3, IA-4, IA-5, IA-6, IA-7, IA-8, IA-9, PM-13",
+    "NIST_CSF": "PR.AC-1, PR.AT-2",
+    "Service": "Penetration Testing",
+    "Std Text Modify": false,
+    "asmt_id": "RV1234",
+    "fy": 2023,
+    "man/tool": "Manual",
+    "severity": "High"
+  },
+  {
+    "Assessment Type": "Internal",
+    "CIS_CSC": "",
+    "CMMC": "IA.2.078, IA.2.079, IA.2.081, IA.3.083",
+    "Date Generated": "11/03/22",
+    "NCATS ID": "65",
+    "NIST_800_53": "AC-2, AT-3, IA-1, IA-10, IA-11, IA-12, IA-2, IA-3, IA-4, IA-5, IA-6, IA-7, IA-8, IA-9, PM-13",
+    "NIST_CSF": "PR.AC-1, PR.AT-1",
+    "Service": "Penetration Testing",
+    "Std Text Modify": false,
+    "asmt_id": "RV1234",
+    "fy": 2023,
+    "man/tool": "Tool",
+    "severity": "High"
+  },
+  {
+    "Assessment Type": "Internal",
+    "CIS_CSC": "",
+    "CMMC": "AC.1.001, AC.2.006, AC.2.016, AC.3.022, AC.4.025, AC.4.032, MP.2.119, MP.3.125, RE.2.138, SC.3.117, SC.3.182, SC.3.185, SC.3.191, SI.5.223",
+    "Date Generated": "11/03/22",
+    "NCATS ID": "60",
+    "NIST_800_53": "AC-2, IA-1, IA-10, IA-11, IA-12, IA-2, IA-3, IA-4, IA-5, IA-6, IA-7, IA-8, IA-9",
+    "NIST_CSF": "PR.AC-1, PR.AC-3, PR.AC-4",
+    "Service": "Penetration Testing",
+    "Std Text Modify": false,
+    "asmt_id": "RV1234",
+    "fy": 2023,
+    "man/tool": "Tool",
+    "severity": "High"
+  },
+  {
+    "Assessment Type": "Phishing",
+    "CIS_CSC": "",
+    "CMMC": "SI.1.211, SI.1.213, SI.2.216, SI.3.218, SI.3.219, SI.3.220",
+    "Date Generated": "11/03/22",
+    "NCATS ID": "27",
+    "NIST_800_53": "AT-2, PM-13",
+    "NIST_CSF": "DE.DP-4, PR.AT-1",
+    "Service": "Phishing Assessment",
+    "Std Text Modify": false,
+    "asmt_id": "RV1234",
+    "fy": 2023,
+    "man/tool": "Tool",
+    "severity": "Medium"
+  },
+  {
+    "Assessment Type": "Phishing",
+    "CIS_CSC": "",
+    "CMMC": "CM.4.073, CM3.069, SI.1.211, SI.1.213, SI.2.216, SI.3.218, SI.3.219, SI.3.220",
+    "Date Generated": "11/03/22",
+    "NCATS ID": "61",
+    "NIST_800_53": "AC-3, CA-2, CA-7, CM-2, CM-7, CP-2, IR-8, PL-2, PM-6",
+    "NIST_CSF": "DE.CM-1, DE.CM-3, DE.CM-4, DE.CM-7, PR.IP-7, PR.PT-3, PR.PT-4",
+    "Service": "Phishing Assessment",
+    "Std Text Modify": false,
+    "asmt_id": "RV1234",
+    "fy": 2023,
+    "man/tool": "Tool",
+    "severity": "High"
+  },
+  {
+    "Length of Campaign (Days)": "2",
+    "Number of Clicks": "421",
+    "Number of Email Targets": "1000",
+    "Number of Users Click": "110",
+    "Number of Users Exploited": "29",
+    "Payload": true,
+    "Time to First Click": "0:00:01",
+    "asmt_id": "RV1234"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Linked Macro Embedded Microsoft Word Document"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "N",
+    "payload_description": "Linked Macro Embedded Microsoft Word Document (Password Protected)"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Linked Batch File OLE Microsoft Word Document"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Linked Batch File OLE Microsoft Word Document (PW Protected)"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "N",
+    "payload_description": "Linked EXE"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Linked DLL"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Certutil HTA"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "N",
+    "payload_description": "Demiguise HTA Embedded HTML"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Linked EXE Embedded HTA"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Linked Powershell HTA"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Linked VBA Embedded HTA"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Cactustorch HTA"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Morph HTA"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Sharpshooter HTA"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "B",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Attached Macro Embedded Microsoft Word Document"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Attached Macro Embedded Microsoft Word Document (Password Protected)"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Attached Batch File OLE Microsoft Word Document"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "N",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Attached Batch File OLE Microsoft Word Document (Password Protected)"
+  },
+  {
+    "asmt_id": "RV1234",
+    "border_protection": "B",
+    "c2_protocol ": "HTTPS",
+    "host_protection": "B",
+    "payload_description": "Attached EXE"
+  },
+  {
+    "Collection": [],
+    "Command and Control": [
+      "Commonly Used Port",
+      "Web Service"
+    ],
+    "Credential Access": [
+      "Credential Dumping",
+      "Credentials in Files",
+      "LLMNR/NBT-NS Poisoning and Relay"
+    ],
+    "Defense Evasion": [
+      "Compiled HTML File",
+      "Web Service"
+    ],
+    "Discovery": [],
+    "Execution": [
+      "Compiled HTML File"
+    ],
+    "Exfiltration": [],
+    "Initial Access": [
+      "Spearphishing Link"
+    ],
+    "Lateral Movement": [
+      "Pass the Hash"
+    ],
+    "Persistence": [],
+    "Privilege Escalation": [],
+    "asmt_id": "RV1234"
+  }
+]

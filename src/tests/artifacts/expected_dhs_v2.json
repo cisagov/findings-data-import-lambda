@@ -1,0 +1,378 @@
+{
+  "attack_paths": {
+    "paths": [
+      {
+        "location": "",
+        "mitre_techniques": [
+          "T1043",
+          "T1223",
+          "T1003",
+          "T1081",
+          "T1171",
+          "T1075",
+          "T1192",
+          "T1102"
+        ],
+        "tools_used": []
+      }
+    ],
+    "total_attack_paths": 1
+  },
+  "critical_infrastructure_sector": "Communications",
+  "data_exfiltration": {
+    "detection": "",
+    "prevention": "",
+    "total_vulnerable_protocols": 0
+  },
+  "external_port_mapping": {
+    "open ports": [],
+    "total_open_ports": 0
+  },
+  "findings": {
+    "final_risk_score": "",
+    "individual_findings": [
+      {
+        "cis_csc": "",
+        "cmmc": "AC.2.008, AC.3.018, IA.3.083",
+        "date_generated": "2022-11-10",
+        "date_of_mitigation": "",
+        "finding_category": "",
+        "finding_risk_score": "",
+        "general_finding_name": "",
+        "kev": "",
+        "location": "Internal",
+        "mitigation_action": "",
+        "mitigation_challenge": "",
+        "mitigation_status": "",
+        "nist_800_53": "AC-2, AT-3, IA-1, IA-10, IA-11, IA-2, IA-3, IA-4, IA-5, IA-6, IA-7, IA-8, IA-9, PM-13",
+        "nist_csf": "PR.AC-1, PR.AT-2",
+        "severity": "High",
+        "specific_finding_name": "Admin Password Reuse"
+      },
+      {
+        "cis_csc": "",
+        "cmmc": "IA.2.078, IA.2.079, IA.2.081, IA.3.083",
+        "date_generated": "2022-11-10",
+        "date_of_mitigation": "",
+        "finding_category": "",
+        "finding_risk_score": "",
+        "general_finding_name": "",
+        "kev": "",
+        "location": "Internal",
+        "mitigation_action": "",
+        "mitigation_challenge": "",
+        "mitigation_status": "",
+        "nist_800_53": "AC-2, AT-3, IA-1, IA-10, IA-11, IA-12, IA-2, IA-3, IA-4, IA-5, IA-6, IA-7, IA-8, IA-9, PM-13",
+        "nist_csf": "PR.AC-1, PR.AT-1",
+        "severity": "High",
+        "specific_finding_name": "Easily Crackable Passwords"
+      },
+      {
+        "cis_csc": "",
+        "cmmc": "AC.1.001, AC.2.006, AC.2.016, AC.3.022, AC.4.025, AC.4.032, MP.2.119, MP.3.125, RE.2.138, SC.3.117, SC.3.182, SC.3.185, SC.3.191, SI.5.223",
+        "date_generated": "2022-11-10",
+        "date_of_mitigation": "",
+        "finding_category": "",
+        "finding_risk_score": "",
+        "general_finding_name": "",
+        "kev": "",
+        "location": "Internal",
+        "mitigation_action": "",
+        "mitigation_challenge": "",
+        "mitigation_status": "",
+        "nist_800_53": "AC-2, IA-1, IA-10, IA-11, IA-12, IA-2, IA-3, IA-4, IA-5, IA-6, IA-7, IA-8, IA-9",
+        "nist_csf": "PR.AC-1, PR.AC-3, PR.AC-4",
+        "severity": "High",
+        "specific_finding_name": "Insecure File Shares"
+      },
+      {
+        "cis_csc": "",
+        "cmmc": "SI.1.211, SI.1.213, SI.2.216, SI.3.218, SI.3.219, SI.3.220",
+        "date_generated": "2022-11-10",
+        "date_of_mitigation": "",
+        "finding_category": "",
+        "finding_risk_score": "",
+        "general_finding_name": "",
+        "kev": "",
+        "location": "Phishing",
+        "mitigation_action": "",
+        "mitigation_challenge": "",
+        "mitigation_status": "",
+        "nist_800_53": "AT-2, PM-13",
+        "nist_csf": "DE.DP-4, PR.AT-1",
+        "severity": "Medium",
+        "specific_finding_name": "Spear Phishing Susceptibility"
+      },
+      {
+        "cis_csc": "",
+        "cmmc": "CM.4.073, CM3.069, SI.1.211, SI.1.213, SI.2.216, SI.3.218, SI.3.219, SI.3.220",
+        "date_generated": "2022-11-10",
+        "date_of_mitigation": "",
+        "finding_category": "",
+        "finding_risk_score": "",
+        "general_finding_name": "",
+        "kev": "",
+        "location": "Phishing",
+        "mitigation_action": "",
+        "mitigation_challenge": "",
+        "mitigation_status": "",
+        "nist_800_53": "AC-3, CA-2, CA-7, CM-2, CM-7, CP-2, IR-8, PL-2, PM-6",
+        "nist_csf": "DE.CM-1, DE.CM-3, DE.CM-4, DE.CM-7, PR.IP-7, PR.PT-3, PR.PT-4",
+        "severity": "High",
+        "specific_finding_name": "Spear Phishing Weaknesses"
+      }
+    ],
+    "mitigated_risk_score": "",
+    "original_risk_score": "",
+    "total_findings": 5
+  },
+  "fiscal_year": 2023,
+  "id": "RV1234",
+  "known_exploited_vulnerabilities": {
+    "kevs": [],
+    "total_kevs": ""
+  },
+  "phishing_assessment": {
+    "campaigns": [
+      {
+        "credentials_harvested": "",
+        "email_deliverd": 967,
+        "email_sent": 1000,
+        "length_of_campaign": 2,
+        "time_to_first_click": "0:00:01",
+        "total_clicks": 421,
+        "unique_clicks": 110,
+        "users_exploited": 29
+      }
+    ],
+    "date_generated": "2022-11-10",
+    "payloads": [
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Linked Macro Embedded Microsoft Word Document",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "N",
+        "payload_description": "Linked Macro Embedded Microsoft Word Document (Password Protected)",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Linked Batch File OLE Microsoft Word Document",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Linked Batch File OLE Microsoft Word Document (PW Protected)",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "N",
+        "payload_description": "Linked EXE",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Linked DLL",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Certutil HTA",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "N",
+        "payload_description": "Demiguise HTA Embedded HTML",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Linked EXE Embedded HTA",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Linked Powershell HTA",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Linked VBA Embedded HTA",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Cactustorch HTA",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Morph HTA",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Sharpshooter HTA",
+        "techniques": []
+      },
+      {
+        "border_protection": "B",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Attached Macro Embedded Microsoft Word Document",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Attached Macro Embedded Microsoft Word Document (Password Protected)",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Attached Batch File OLE Microsoft Word Document",
+        "techniques": []
+      },
+      {
+        "border_protection": "N",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Attached Batch File OLE Microsoft Word Document (Password Protected)",
+        "techniques": []
+      },
+      {
+        "border_protection": "B",
+        "c2_protocol": "HTTPS",
+        "code_type": "",
+        "command": "",
+        "file_types": "",
+        "filename": "",
+        "host_protection": "B",
+        "payload_description": "Attached EXE",
+        "techniques": []
+      }
+    ],
+    "phishing_assessment_date": "2022-10-01",
+    "security_solutions": []
+  },
+  "ransomware_susceptibility": {
+    "end_user_detection": "",
+    "security_personnel_detection": "",
+    "security_solution_detection": "",
+    "security_solution_prevention": "",
+    "time_to_personnel_detection": "",
+    "time_to_solution_detection": "",
+    "time_to_user_detection": "",
+    "total_vulnerable_scenarios": ""
+  },
+  "sector": "Federal",
+  "state": "PA",
+  "testing_completion_date": "2022-10-07",
+  "testing_start_date": "2022-10-01",
+  "type": "Risk and Vulnerability Assessment (RVA)"
+}
