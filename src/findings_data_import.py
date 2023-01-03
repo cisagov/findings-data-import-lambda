@@ -75,7 +75,6 @@ def get_field_map(s3_client=None,
     -------
     dict : The field map dict object
     """
-
     try:
         # Log what/where up front so the subsequent messages make more sense
         logging.info(
@@ -134,7 +133,6 @@ def setup_database_connection(
     Returns
     -------
     database : A database object returned from the MongoClient
-
     """
     try:
         logging.info(f"Grabbing database credentials from SSM.")
@@ -312,9 +310,7 @@ def update_record(
 
     finding: dict
         The finding data to insert.
-
     """
-
     if not "RVA ID" in finding:
         raise ValueError("The passed finding had no RVA ID field.")
 
