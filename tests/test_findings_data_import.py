@@ -2,9 +2,6 @@
 """Tests for the findings_data_import module."""
 
 # Standard Python Libraries
-import logging
-import os
-import sys
 import json
 from unittest.mock import patch, MagicMock, Mock
 

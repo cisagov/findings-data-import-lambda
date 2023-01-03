@@ -45,15 +45,15 @@ def move_processed_file(s3_client, bucket, folder, filename):
         s3_client.delete_object(Bucket=bucket, Key=filename)
         logging.info('Successfully deleted original "%s"', filename)
     except ClientError as delete_error:
-        logging.error('Failed while moving "%s" to "%s" directory', filename, folder)
+        logging.error('Failed while moving "%s" to "%s" directory',
+                      filename, folder)
         logging.error("Error: %s", delete_error)
 
 
-def get_field_map(
-    s3_client=None,
-    s3_bucket=None,
-    field_map=None
-):
+def get_field_map(s3_client=None,
+                  s3_bucket=None,
+                  field_map=None
+                  ):
     """Read a JSON field map object from a s3 bucket, and return the field map dict
 
     Parameters:
@@ -77,8 +77,9 @@ def get_field_map(
     """
 
     try:
-        #Log what/where up front so the subsequent messages make more sense
-        logging.info(f"Attempting to read Configuration data from {field_map} in {s3_bucket}")
+        # Log what/where up front so the subsequent messages make more sense
+        logging.info(
+            f"Attempting to read Configuration data from {field_map} in {s3_bucket}")
         # Fetch object for the field_map JSON
         field_map_object = s3_client.get_object(Bucket=s3_bucket, Key=field_map)
         # Load field_map JSONs
@@ -90,10 +91,11 @@ def get_field_map(
 
         return field_map_dict
     except ClientError as client_err:
-        raise Exception(f"Unable to download the field map data {field_map} from {s3_bucket}",client_err)
+        raise Exception(
+            f"Unable to download the field map data {field_map} from {s3_bucket}", client_err)
     except json.JSONDecodeError as json_err:
-        raise Exception("Unable to decode field map data, does not appear to be valid JSON.",json_err)
-
+        raise Exception(
+            "Unable to decode field map data, does not appear to be valid JSON.", json_err)
 
 
 def setup_database_connection(
@@ -168,11 +170,12 @@ def setup_database_connection(
         )
         return db
     except ClientError as client_err:
-        raise Exception("Unable to fetch database credentials from the SSM", client_err).with_traceback()
-    #Handle all mongo exceptions the same way..
+        raise Exception(
+            "Unable to fetch database credentials from the SSM", client_err).with_traceback()
+    # Handle all mongo exceptions the same way..
     except Exception as err:
-        raise Exception("Unable to connect to the mongo db", err).with_traceback()
-
+        raise Exception("Unable to connect to the mongo db",
+                        err).with_traceback()
 
 
 def download_file(
@@ -205,27 +208,29 @@ def download_file(
     logging.info(f"Retrieving {data_filename} from {s3_bucket}...")
 
     try:
-    # Securely create a temporary file to store the JSON data in
+        # Securely create a temporary file to store the JSON data in
         temp_file_descriptor, temp_data_filepath = tempfile.mkstemp()
         # Fetch findings data file from S3 bucket
         s3_client.download_file(
             Bucket=s3_bucket, Key=data_filename, Filename=temp_data_filepath
         )
 
-          # Load data JSON
+        # Load data JSON
         with open(temp_data_filepath) as data_json_file:
             findings_data = json.load(data_json_file)
 
         logging.info(f"JSON data loaded from {data_filename}.")
         return temp_data_filepath, findings_data
     except json.JSONDecodeError as json_err:
-        raise(Exception(f"Unable to decode JSON data for {data_filename}",json_err).with_traceback())
+        raise (Exception(
+            f"Unable to decode JSON data for {data_filename}", json_err).with_traceback())
     except ClientError as err:
-        raise(Exception(
-            f"Error downloading file {data_filename} from {s3_bucket} ",err).with_traceback()
+        raise (Exception(
+            f"Error downloading file {data_filename} from {s3_bucket} ", err).with_traceback()
         )
 
-def extract_findings(findings_data,field_map_dict):
+
+def extract_findings(findings_data, field_map_dict):
     """
     Validate and return cleaned/processed finding
 
@@ -251,8 +256,9 @@ def extract_findings(findings_data,field_map_dict):
     # Iterate through data and save each record to the database
     for index, finding in enumerate(findings_data):
 
-        if not finding or not hasattr(finding,"keys"):
-            logging.warning("Received an empty of invalid finding object, skipping.")
+        if not finding or not hasattr(finding, "keys"):
+            logging.warning(
+                "Received an empty of invalid finding object, skipping.")
             continue
 
         # Replace or rename fields from replacement JSON
@@ -262,11 +268,11 @@ def extract_findings(findings_data,field_map_dict):
                     finding[field_map_dict[field]] = finding[field]
                 finding.pop(field, None)
 
-
-        #work with v1 and v2. If has NCATS ID  OR findings the document is probably OK
+        # work with v1 and v2. If has NCATS ID  OR findings the document is probably OK
         if not "RVA ID" in finding.keys() or (
-            not ("NCATS ID" in finding.keys() and "Severity" in finding.keys()) and not "findings" in finding.keys()
-            ):
+            not ("NCATS ID" in finding.keys() and "Severity" in finding.keys()
+                 ) and not "findings" in finding.keys()
+        ):
             logging.warning(
                 f"Skipping record {index}. Missing 'RVA ID' or 'NCATS ID' field."
             )
@@ -280,7 +286,8 @@ def extract_findings(findings_data,field_map_dict):
                 rID += f".{rvaId.group(2)}"
             finding["RVA ID"] = rID
         else:
-            logging.warning(f"Skipping record {index}: Unable to extract valid RVA ID from '{finding['RVA ID']}")
+            logging.warning(
+                f"Skipping record {index}: Unable to extract valid RVA ID from '{finding['RVA ID']}")
             continue
 
         valid_findings.append(finding)
@@ -323,7 +330,7 @@ def update_record(
             {"$set": finding},
             upsert=True,
         )
-    #'v2' record has a findings collection and is one record per RVA ID
+    # 'v2' record has a findings collection and is one record per RVA ID
     elif "findings" in finding:
         finding['schema'] = 'v2'
         db.findings.find_one_and_update(
@@ -334,7 +341,8 @@ def update_record(
             upsert=True,
         )
     else:
-        raise ValueError("The passed finding was not identifiable as V1 or V2 schema")
+        raise ValueError(
+            "The passed finding was not identifiable as V1 or V2 schema")
 
 
 def import_data(
@@ -395,7 +403,7 @@ def import_data(
 
     """
     # Boto3 client for S3
-    s3_client = boto3_client("s3")    
+    s3_client = boto3_client("s3")
 
     try:
         # This allows us to access keys with spaces in them. When they are passed
@@ -413,16 +421,16 @@ def import_data(
             Bucket=s3_bucket, Key=data_filename, Filename=temp_data_filepath
         )
 
-        #Download the data file into a temporary location
+        # Download the data file into a temporary location
         temp_data_filepath, findings_data = download_file(
-            s3_client=s3_client,s3_bucket=s3_bucket,data_filename=data_filename
+            s3_client=s3_client, s3_bucket=s3_bucket, data_filename=data_filename
         )
 
         # fetch field map dictionary
         field_map_dict = get_field_map(
-            s3_client=s3_client,s3_bucket=s3_bucket,field_map=field_map
+            s3_client=s3_client, s3_bucket=s3_bucket, field_map=field_map
         )
-             
+
         db = setup_database_connection(
             ssm_db_name=ssm_db_name,
             ssm_db_user=ssm_db_user,
@@ -433,23 +441,25 @@ def import_data(
 
         logging.info(f"Extracting/validating findings from {data_filename}")
         valid_findings = extract_findings(
-            findings_data=findings_data,field_map_dict=field_map_dict
+            findings_data=findings_data, field_map_dict=field_map_dict
         )
         logging.info(f"Updating records")
         for finding in valid_findings:
-            update_record(db=db,finding=finding)
+            update_record(db=db, finding=finding)
 
         logging.info(
             f"{len(valid_findings)}/{len(findings_data)} documents successfully processed from '{data_filename}'."
         )
 
         if save_succeeded:
-            move_processed_file(s3_client, s3_bucket, SUCCEEDED_FOLDER, data_filename)
+            move_processed_file(s3_client, s3_bucket,
+                                SUCCEEDED_FOLDER, data_filename)
     except Exception as err:
         logging.error("Error Message %s: %s", type(err), err)
 
         if save_failed:
-            move_processed_file(s3_client, s3_bucket, FAILED_FOLDER, data_filename)
+            move_processed_file(s3_client, s3_bucket,
+                                FAILED_FOLDER, data_filename)
     finally:
         # Delete local temp data file(s) regardless of whether or not
         # any exceptions were thrown in the try block above
