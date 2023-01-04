@@ -293,8 +293,9 @@ def extract_findings(findings_data, field_map_dict):
         valid_findings.append(finding)
 
     logging.info(
-        "{%s} documents successfully processed.",
-        len(valid_findings)/len(findings_data)
+        "{%s/%s} documents successfully processed.",
+        len(valid_findings),
+        len(findings_data)
     )
 
     return valid_findings
