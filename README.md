@@ -1,4 +1,4 @@
-# findings-data-import-lambda ƛ #
+# findings-data-import-lambda ƛ
 
 [![GitHub Build Status](https://github.com/cisagov/findings-data-import-lambda/workflows/build/badge.svg)](https://github.com/cisagov/findings-data-import-lambda/actions)
 
@@ -6,7 +6,7 @@
 that reads findings data from a JSON file in an S3 bucket and imports it
 into a database.
 
-## Field mapping ##
+## Field mapping
 
 The Lambda supports using a field map configuration JSON in S3 (object key
 provided to the Lambda as the `field_map` environment variable) to dynamically
@@ -18,29 +18,23 @@ to find in the input JSON and the value (designated by `"value_to_replace_field_
 in the example below) is the new field name desired. If the value is empty the
 script will remove that element from the record.
 
-### Example field map JSON file ###
+### Example field map JSON file
 
 ```json
 {
-    "field_to_replace": "value_to_replace_field_with",
-    "field_to_remove": ""
+  "field_to_replace": "value_to_replace_field_with",
+  "field_to_remove": ""
 }
 ```
 
-## Default Field Mapping File ##
-
-A default mapping file exists at `tests/artifacts/field_map.json` and should be
-used as a starting point to be compatible with most versions of the Pen Test Portal's
-findings JSON output.
-
-## Operational note ##
+## Operational note
 
 This script will attempt to extract the RVA ID from the `RVA ID` field in a record
 after field mapping has taken place. It expects the ID found to end in the format
 `DDDD`, but allows an increment such that `0123.4` is valid. However, the matched
 ID is reduced to the four leading digits in this case.
 
-## Building the base Lambda image ##
+## Building the base Lambda image
 
 The base Lambda image can be built with the following command:
 
@@ -51,7 +45,7 @@ docker compose build
 This base image is used both to build a deployment package and to run the
 Lambda locally.
 
-## Building a deployment package ##
+## Building a deployment package
 
 You can build a deployment zip file to use when creating a new AWS Lambda
 function with the following command:
@@ -62,7 +56,7 @@ docker compose up build_deployment_package
 
 This will output the deployment zip file in the root directory.
 
-## Running the Lambda locally ##
+## Running the Lambda locally
 
 The configuration in this repository allows you run the Lambda locally for
 testing as long as you do not need explicit permissions for other AWS
@@ -87,7 +81,7 @@ Once you are finished you can stop the detached container with the following com
 docker compose down
 ```
 
-## How to update Python dependencies ##
+## How to update Python dependencies
 
 The Python dependencies are maintained using a [Pipenv](https://github.com/pypa/pipenv)
 configuration for each supported Python version. Changes to requirements
@@ -102,12 +96,12 @@ cd src/py3.9
 pipenv lock
 ```
 
-## Contributing ##
+## Contributing
 
-We welcome contributions!  Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for
+We welcome contributions! Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for
 details.
 
-## License ##
+## License
 
 This project is in the worldwide [public domain](LICENSE).
 
