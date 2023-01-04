@@ -71,7 +71,7 @@ def get_field_map(s3_client=None, s3_bucket=None, field_map=None):
     try:
         # Log what/where up front so the subsequent messages make more sense
         logging.info(
-            f"Attempting to read Configuration data from {field_map} in {s3_bucket}"
+            "Attempting to read Configuration data from %s in %s",field_map, s3_bucket
         )
         # Fetch object for the field_map JSON
         field_map_object = s3_client.get_object(Bucket=s3_bucket, Key=field_map)
@@ -79,8 +79,8 @@ def get_field_map(s3_client=None, s3_bucket=None, field_map=None):
         field_map_dict = json.loads(
             field_map_object.get("Body", "{}").read().decode("utf-8")
         )
-        logging.info(f"Configuration data loaded from {field_map}")
-        logging.debug(f"Configuration data: {field_map_dict}")
+        logging.info("Configuration data loaded from %s", field_map)
+        logging.debug("Configuration data: %s", field_map_dict)
 
         return field_map_dict
     except ClientError as client_err:
@@ -144,7 +144,7 @@ def setup_database_connection(
             )
             db_info[key] = response["Parameter"]["Value"]
 
-        logging.info(f"Connecting to the mongo db at {db_hostname} {db_port}")
+        logging.info("Connecting to the mongo db at %s %s", db_hostname, db_port)
         # Set up database connection
         credPw = urllib.parse.quote(db_info["password"])
         db_uri = (
@@ -158,7 +158,10 @@ def setup_database_connection(
         )
         db = db_connection[db_info["db_name"]]
         logging.info(
-            f"DB connection set up to {db_hostname}:{db_port}/{db_info['db_name']}"
+            "DB connection set up to %s:%s/%s",
+            db_hostname,
+            db_port,
+            db_info['db_name']
         )
         return db
     except ClientError as client_err:
@@ -194,7 +197,7 @@ def download_file(
         string : The file path of the newly created temp file
         dict   : The JSON data dictionary loaded from downloaded file
     """
-    logging.info(f"Retrieving {data_filename} from {s3_bucket}...")
+    logging.info("Retrieving %s from %s...", data_filename, s3_bucket)
 
     try:
         # Securely create a temporary file to store the JSON data in
@@ -208,7 +211,7 @@ def download_file(
         with open(temp_data_filepath) as data_json_file:
             findings_data = json.load(data_json_file)
 
-        logging.info(f"JSON data loaded from {data_filename}.")
+        logging.info("JSON data loaded from %s.", data_filename)
         return temp_data_filepath, findings_data
     except json.JSONDecodeError as json_err:
         raise (
@@ -267,7 +270,8 @@ def extract_findings(findings_data, field_map_dict):
             and "findings" not in finding.keys()
         ):
             logging.warning(
-                f"Skipping record {index}. Missing 'RVA ID' or 'NCATS ID' field."
+                "Skipping record %s. Missing 'RVA ID' or 'NCATS ID' field.",
+                index
             )
             continue
 
@@ -280,14 +284,17 @@ def extract_findings(findings_data, field_map_dict):
             finding["RVA ID"] = rID
         else:
             logging.warning(
-                f"Skipping record {index}: Unable to extract valid RVA ID from '{finding['RVA ID']}"
+                "Skipping record %s: Unable to extract valid RVA ID from '%'",
+                index,
+                finding['RVA ID']
             )
             continue
 
         valid_findings.append(finding)
 
     logging.info(
-        f"{len(valid_findings)}/{len(findings_data)} documents successfully processed."
+        "{%s} documents successfully processed.",
+        len(valid_findings)/len(findings_data)
     )
 
     return valid_findings
@@ -392,7 +399,7 @@ def import_data(
     """
     # Boto3 client for S3
     s3_client = boto3_client("s3")
-
+    temp_data_filepath = None
     try:
         # This allows us to access keys with spaces in them. When they are passed
         # in to the lambda the spaces are replaced with plus signs which results
@@ -422,7 +429,7 @@ def import_data(
             db_port=db_port,
         )
 
-        logging.info(f"Extracting/validating findings from {data_filename}")
+        logging.info("Extracting/validating findings from %s", data_filename)
         valid_findings = extract_findings(
             findings_data=findings_data, field_map_dict=field_map_dict
         )
@@ -431,7 +438,10 @@ def import_data(
             update_record(db=db, finding=finding)
 
         logging.info(
-            f"{len(valid_findings)}/{len(findings_data)} documents successfully processed from '{data_filename}'."
+            "%s/%s documents successfully processed from '%s'.",
+            len(valid_findings),
+            len(findings_data),
+            data_filename
         )
 
         if save_succeeded:
@@ -444,9 +454,10 @@ def import_data(
     finally:
         # Delete local temp data file(s) regardless of whether or not
         # any exceptions were thrown in the try block above
-        os.remove(temp_data_filepath)
-        logging.info(
-            'Deleted working copy of "%s" from local filesystem', data_filename
-        )
+        if temp_data_filepath:
+            os.remove(temp_data_filepath)
+            logging.info(
+                'Deleted working copy of "%s" from local filesystem', data_filename
+            )
 
     return True
