@@ -302,7 +302,7 @@ def update_record(db=None, finding=None):
         The database to update
 
     finding: dict
-        The finding data to insert.1
+        The finding data to insert.
     """
     if "RVA ID" not in finding:
         raise ValueError("The passed finding had no RVA ID field.")
