@@ -1,4 +1,4 @@
-boto3==1.26.41
-pymongo==4.3.3
+boto3>=1.26
+pymongo>=4.3
 setuptools
 wheel
