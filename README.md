@@ -18,7 +18,7 @@ to find in the input JSON and the value (designated by `"value_to_replace_field_
 in the example below) is the new field name desired. If the value is empty the
 script will remove that element from the record.
 
-### Example field map JSON file ##
+### Example field map JSON file ###
 
 ```json
 {
