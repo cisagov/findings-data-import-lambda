@@ -267,7 +267,7 @@ def extract_findings(findings_data, field_map_dict):
             and "findings" not in finding.keys()
         ):
             logging.warning(
-                "Skipping record %s. Missing 'RVA ID' or 'NCATS ID' field.", index
+                "Skipping record %d. Missing 'RVA ID' or 'NCATS ID' field.", index
             )
             continue
 
@@ -280,7 +280,7 @@ def extract_findings(findings_data, field_map_dict):
             finding["RVA ID"] = rID
         else:
             logging.warning(
-                "Skipping record %s: Unable to extract valid RVA ID from '%'",
+                "Skipping record %d: Unable to extract valid RVA ID from '%s'",
                 index,
                 finding["RVA ID"],
             )
@@ -289,7 +289,7 @@ def extract_findings(findings_data, field_map_dict):
         valid_findings.append(finding)
 
     logging.info(
-        "{%s/%s} documents successfully processed.",
+        "{%d/%d} documents successfully processed.",
         len(valid_findings),
         len(findings_data),
     )
@@ -435,7 +435,7 @@ def import_data(
             update_record(db=db, finding=finding)
 
         logging.info(
-            "%s/%s documents successfully processed from '%s'.",
+            "%d/%d documents successfully processed from '%s'.",
             len(valid_findings),
             len(findings_data),
             data_filename,
