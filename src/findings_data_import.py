@@ -191,7 +191,7 @@ def download_file(
 
     Returns
     -------
-        string, : The file path of the newly created temp file
+        string : The file path of the newly created temp file
         dict   : The JSON data dictionary loaded from downloaded file
     """
     logging.info(f"Retrieving {data_filename} from {s3_bucket}...")
