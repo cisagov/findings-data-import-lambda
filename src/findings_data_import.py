@@ -261,7 +261,7 @@ def extract_findings(findings_data, field_map_dict):
                     finding[field_map_dict[field]] = finding[field]
                 finding.pop(field, None)
 
-        # work with v1 and v2. If has NCATS ID  OR findings the document is probably OK
+        # work with v1 and v2. If has NCATS ID OR findings the document is probably OK
         if "RVA ID" not in finding.keys() or (
             not ("NCATS ID" in finding.keys() and "Severity" in finding.keys())
             and "findings" not in finding.keys()
