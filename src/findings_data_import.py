@@ -71,7 +71,7 @@ def get_field_map(s3_client=None, s3_bucket=None, field_map=None):
     try:
         # Log what/where up front so the subsequent messages make more sense
         logging.info(
-            "Attempting to read Configuration data from %s in %s",field_map, s3_bucket
+            "Attempting to read Configuration data from %s in %s", field_map, s3_bucket
         )
         # Fetch object for the field_map JSON
         field_map_object = s3_client.get_object(Bucket=s3_bucket, Key=field_map)
@@ -158,10 +158,7 @@ def setup_database_connection(
         )
         db = db_connection[db_info["db_name"]]
         logging.info(
-            "DB connection set up to %s:%s/%s",
-            db_hostname,
-            db_port,
-            db_info['db_name']
+            "DB connection set up to %s:%s/%s", db_hostname, db_port, db_info["db_name"]
         )
         return db
     except ClientError as client_err:
@@ -270,8 +267,7 @@ def extract_findings(findings_data, field_map_dict):
             and "findings" not in finding.keys()
         ):
             logging.warning(
-                "Skipping record %s. Missing 'RVA ID' or 'NCATS ID' field.",
-                index
+                "Skipping record %s. Missing 'RVA ID' or 'NCATS ID' field.", index
             )
             continue
 
@@ -286,7 +282,7 @@ def extract_findings(findings_data, field_map_dict):
             logging.warning(
                 "Skipping record %s: Unable to extract valid RVA ID from '%'",
                 index,
-                finding['RVA ID']
+                finding["RVA ID"],
             )
             continue
 
@@ -295,7 +291,7 @@ def extract_findings(findings_data, field_map_dict):
     logging.info(
         "{%s/%s} documents successfully processed.",
         len(valid_findings),
-        len(findings_data)
+        len(findings_data),
     )
 
     return valid_findings
@@ -442,7 +438,7 @@ def import_data(
             "%s/%s documents successfully processed from '%s'.",
             len(valid_findings),
             len(findings_data),
-            data_filename
+            data_filename,
         )
 
         if save_succeeded:
