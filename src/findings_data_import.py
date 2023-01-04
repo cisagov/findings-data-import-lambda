@@ -55,7 +55,7 @@ def get_field_map(s3_client=None, s3_bucket=None, field_map=None):
     Parameters:
     -----------
     s3_client : S3.Client
-        The AWS S3 Client to retrieve the data file with .
+        The AWS S3 Client to retrieve the data file with.
 
     s3_bucket : str
         The AWS S3 bucket containing the data file.
