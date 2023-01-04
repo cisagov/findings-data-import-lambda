@@ -180,7 +180,7 @@ def download_file(
     Parameters:
     -----------
     s3_client : S3.Client
-        The AWS S3 Client to retrieve the data file with .
+        The AWS S3 Client to retrieve the data file with.
 
     s3_bucket : str
         The AWS S3 bucket containing the data file.
