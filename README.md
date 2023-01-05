@@ -98,7 +98,7 @@ pipenv lock
 
 ## Contributing ##
 
-We welcome contributions! Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for
+We welcome contributions!  Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for
 details.
 
 ## License ##

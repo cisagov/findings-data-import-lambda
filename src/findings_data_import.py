@@ -83,16 +83,16 @@ def get_field_map(s3_client=None, s3_bucket=None, field_map=None):
         logging.debug("Configuration data: %s", field_map_dict)
 
         return field_map_dict
-    except ClientError as client_err:
-        raise Exception(
-            f"Unable to download the field map data {field_map} from {s3_bucket}",
-            client_err,
+    except ClientError:
+        logging.error(
+            "Unable to download the field map data %s from %s", field_map, s3_bucket
         )
-    except json.JSONDecodeError as json_err:
-        raise Exception(
-            "Unable to decode field map data, does not appear to be valid JSON.",
-            json_err,
+        raise
+    except json.JSONDecodeError:
+        logging.error(
+            "Unable to decode field map data, does not appear to be valid JSON."
         )
+        raise
 
 
 def setup_database_connection(
@@ -102,7 +102,7 @@ def setup_database_connection(
     ssm_db_user=None,
     ssm_db_password=None,
 ):
-    """Set up a mongo db connection based on the supplied host/port and SSM key values.
+    """Set up a MongoDB connection based on the supplied host/port and SSM key values.
 
     Parameters
     ----------
@@ -175,7 +175,7 @@ def download_file(
     s3_bucket=None,
     data_filename=None,
 ):
-    """Download a file from a specified s3 bucket, and place it in a temporary file path.
+    """Download a file from a specified S3 bucket, and place it in a temporary file path.
 
     Parameters:
     -----------
@@ -210,18 +210,12 @@ def download_file(
 
         logging.info("JSON data loaded from %s.", data_filename)
         return temp_data_filepath, findings_data
-    except json.JSONDecodeError as json_err:
-        raise (
-            Exception(
-                f"Unable to decode JSON data for {data_filename}", json_err
-            ).with_traceback()
-        )
-    except ClientError as err:
-        raise (
-            Exception(
-                f"Error downloading file {data_filename} from {s3_bucket} ", err
-            ).with_traceback()
-        )
+    except json.JSONDecodeError:
+        logging.error("Unable to decode JSON data for %s", data_filename)
+        raise
+    except ClientError:
+        logging.error("Error downloading file %s from %s", data_filename, s3_bucket)
+        raise
 
 
 def extract_findings(findings_data, field_map_dict):
@@ -244,17 +238,17 @@ def extract_findings(findings_data, field_map_dict):
     valid_findings = []
 
     # if we (v2) get a lone object, wrap it in a list for compatability
-    if type(findings_data) != list:
+    if not isinstance(findings_data, list):
         findings_data = [findings_data]
 
     # Iterate through data and save each record to the database
     for index, finding in enumerate(findings_data):
 
-        if not finding or not hasattr(finding, "keys"):
-            logging.warning("Received an empty of invalid finding object, skipping.")
+        if not finding or not isinstance(finding, dict):
+            logging.warning("Received an empty or invalid finding object, skipping.")
             continue
 
-        # Replace or rename fields from replacement JSON
+        # Replace or rename fields according to the field mapping configuration
         for field in field_map_dict:
             if field in finding.keys():
                 if field_map_dict[field]:
@@ -267,7 +261,7 @@ def extract_findings(findings_data, field_map_dict):
             and "findings" not in finding.keys()
         ):
             logging.warning(
-                "Skipping record %d. Missing 'RVA ID' or 'NCATS ID' field.", index
+                'Skipping record %d. Missing "RVA ID" or "NCATS ID" field.', index
             )
             continue
 
@@ -280,7 +274,7 @@ def extract_findings(findings_data, field_map_dict):
             finding["RVA ID"] = rID
         else:
             logging.warning(
-                "Skipping record %d: Unable to extract valid RVA ID from '%s'",
+                'Skipping record %d: Unable to extract valid RVA ID from "%s"',
                 index,
                 finding["RVA ID"],
             )
@@ -289,7 +283,7 @@ def extract_findings(findings_data, field_map_dict):
         valid_findings.append(finding)
 
     logging.info(
-        "{%d/%d} documents successfully processed.",
+        "%d/%d documents successfully processed.",
         len(valid_findings),
         len(findings_data),
     )
@@ -309,11 +303,11 @@ def update_record(db=None, finding=None):
         The finding data to insert.
     """
     if "RVA ID" not in finding:
-        raise ValueError("The passed finding had no RVA ID field.")
+        raise ValueError("The passed finding has no RVA ID field.")
 
     # if it has "NCATS ID", it is 'v1' record
     if "NCATS ID" in finding and "Severity" in finding:
-        finding["schema"] = "v1"
+        finding["Schema"] = "v1"
         db.findings.find_one_and_update(
             {
                 "RVA ID": finding["RVA ID"],
@@ -399,7 +393,7 @@ def import_data(
     temp_data_filepath = None
     try:
         # This allows us to access keys with spaces in them. When they are passed
-        # in to the lambda the spaces are replaced with plus signs which results
+        # in to the Lambda the spaces are replaced with plus signs which results
         # in being unable to access the object with the given key. This WILL
         # result in issues if the object also has plus signs as part of its name
         # and ideally object names should contain none of the characters listed
@@ -435,7 +429,7 @@ def import_data(
             update_record(db=db, finding=finding)
 
         logging.info(
-            "%d/%d documents successfully processed from '%s'.",
+            '%d/%d documents successfully processed from "%s".',
             len(valid_findings),
             len(findings_data),
             data_filename,
