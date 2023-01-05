@@ -97,11 +97,11 @@ def get_field_map(s3_client: typing.Any, s3_bucket: str, field_map: str):
 
 
 def setup_database_connection(
-    db_hostname=None,
-    db_port=None,
-    ssm_db_name=None,
-    ssm_db_user=None,
-    ssm_db_password=None,
+    db_hostname: str,
+    db_port: str,
+    ssm_db_name: str,
+    ssm_db_user: str,
+    ssm_db_password: str,
 ):
     """Set up a MongoDB connection based on the supplied host/port and SSM key values.
 
@@ -163,12 +163,14 @@ def setup_database_connection(
         )
         return db
     except ClientError as client_err:
-        raise Exception(
-            "Unable to fetch database credentials from the SSM", client_err
-        ).with_traceback()
+        logging.error(
+            "Unable to fetch database credentials from the SSM: (%s).", client_err
+        )
+        raise
     # Handle all mongo exceptions the same way..
     except Exception as err:
-        raise Exception("Unable to connect to the mongo db", err).with_traceback()
+        logging.error("Unable to connect to the mongo db: (%s).", err)
+        raise
 
 
 def download_file(
