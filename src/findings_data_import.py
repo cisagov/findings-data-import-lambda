@@ -319,7 +319,7 @@ def update_record(db=None, finding=None):
         )
     # 'v2' record has a findings collection and is one record per RVA ID
     elif "findings" in finding:
-        finding["schema"] = "v2"
+        finding["Schema"] = "v2"
         db.findings.find_one_and_update(
             {
                 "RVA ID": finding["RVA ID"],
