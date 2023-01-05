@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import tempfile
+import typing
 import urllib.parse
 
 # Third-Party Libraries
@@ -49,7 +50,7 @@ def move_processed_file(s3_client, bucket, folder, filename):
         logging.error("Error: %s", delete_error)
 
 
-def get_field_map(s3_client=None, s3_bucket=None, field_map=None):
+def get_field_map(s3_client: typing.Any, s3_bucket: str, field_map: str):
     """Read a JSON field map object from a s3 bucket, and return the field map dict.
 
     Parameters:
@@ -171,9 +172,9 @@ def setup_database_connection(
 
 
 def download_file(
-    s3_client=None,
-    s3_bucket=None,
-    data_filename=None,
+    s3_client: typing.Any,
+    s3_bucket: str,
+    data_filename: str,
 ):
     """Download a file from a specified S3 bucket, and place it in a temporary file path.
 
@@ -218,14 +219,14 @@ def download_file(
         raise
 
 
-def extract_findings(findings_data, field_map_dict):
+def extract_findings(findings_data: list, field_map_dict: dict):
     """
     Validate and return cleaned/processed finding.
 
     Parameters
     ----------
-    findings_data : dict
-        The findings dictionary pulled from a findings JSON file
+    findings_data : list
+        The findings dictionary pulled from a findings JSON file, either as a list of dict objects (v1), or a lone dict object (v2)
 
     field_map_dict: dict
         The dictionary of replacement rules for field names in findings_data
@@ -291,7 +292,7 @@ def extract_findings(findings_data, field_map_dict):
     return valid_findings
 
 
-def update_record(db=None, finding=None):
+def update_record(db: typing.Any, finding: dict):
     """Insert or update a record, based on the (naively) detected schema type.
 
     Parameters
