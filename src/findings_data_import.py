@@ -288,7 +288,7 @@ def validate_v1_findings(findings_data: list, field_map_dict: dict):
 
 
 def validate_v2_findings(findings_data: dict):
-    """Validate a list of V1 findings, discarding invalid entries (such as those with no severity which are not explicitly 'findings').
+    """Validate a list of V2 findings, discarding invalid entries (such as those with no severity which are not explicitly 'findings').
 
     Parameters
     ----------
