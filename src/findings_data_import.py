@@ -21,6 +21,9 @@ from pymongo import MongoClient
 
 SUCCEEDED_FOLDER = "success"
 FAILED_FOLDER = "failed"
+# Identifier for V1 vs V2 schema
+V1_SCHEMA = "v1"
+V2_SCHEMA = "v2"
 
 
 def move_processed_file(s3_client, bucket, folder, filename):
@@ -221,29 +224,22 @@ def download_file(
         raise
 
 
-def extract_findings(findings_data: list, field_map_dict: dict):
-    """
-    Validate and return cleaned/processed finding.
+def validate_v1_findings(findings_data: list, field_map_dict: dict):
+    """Validate a list of V1 findings, discarding invalid entries (such as those with no severity which are not explicitly 'findings').
 
     Parameters
     ----------
     findings_data : list
-        The findings dictionary pulled from a findings JSON file, either as a list of dict objects (v1), or a lone dict object (v2)
+        The findings list pulled from a findings JSON file, v1-style
 
     field_map_dict: dict
-        The dictionary of replacement rules for field names in findings_data
+        The dictionary of replacement rules for field names in findings_data (used only in V1 style processing)
 
     Returns
     -------
     list : A list of findings objects from findings_data that pass validation
-
     """
     valid_findings = []
-
-    # if we (v2) get a lone object, wrap it in a list for compatability
-    if not isinstance(findings_data, list):
-        findings_data = [findings_data]
-
     # Iterate through data and save each record to the database
     for index, finding in enumerate(findings_data):
 
@@ -259,12 +255,14 @@ def extract_findings(findings_data: list, field_map_dict: dict):
                 finding.pop(field, None)
 
         # work with v1 and v2. If has NCATS ID OR findings the document is probably OK
-        if "RVA ID" not in finding.keys() or (
-            not ("NCATS ID" in finding.keys() and "Severity" in finding.keys())
-            and "findings" not in finding.keys()
+        if (
+            "RVA ID" not in finding.keys()
+            or "NCATS ID" not in finding.keys()
+            or "Severity" not in finding.keys()
         ):
             logging.warning(
-                'Skipping record %d. Missing "RVA ID" or "NCATS ID" field.', index
+                'Skipping record %d. Missing "RVA ID", "NCATS ID", or "Severity" field.',
+                index,
             )
             continue
 
@@ -282,13 +280,95 @@ def extract_findings(findings_data: list, field_map_dict: dict):
                 finding["RVA ID"],
             )
             continue
-
+        # flag this as V1 so update knows how to handle it, and its clear to folks viewing the data downstream
+        finding["Schema"] = V1_SCHEMA
         valid_findings.append(finding)
+
+    return valid_findings
+
+
+def validate_v2_findings(findings_data: dict):
+    """Validate a list of V1 findings, discarding invalid entries (such as those with no severity which are not explicitly 'findings').
+
+    Parameters
+    ----------
+    findings_data : dict
+        The findings dictionary pulled from a findings JSON file (v2-style)
+
+    field_map_dict: dict
+        The dictionary of replacement rules for field names in findings_data (used only in V1 style processing)
+
+    Returns
+    -------
+    list : A list of findings objects from findings_data that pass validation
+    """
+    try:
+        if not findings_data or not isinstance(findings_data, dict):
+            logging.warning("Received an empty or invalid finding object, skipping.")
+            raise ValueError("Received an empty or invalid object.")
+
+        # work with v1 and v2. If has NCATS ID OR findings the document is probably OK
+        if "id" not in findings_data.keys() or "findings" not in findings_data.keys():
+            logging.warning('Skipping record. Missing "id" or "findings" field.')
+            raise ValueError("Missing id or findings field in v2 findings object")
+
+        # Get RVA ID in format DDDD([.-]D+) from the end of the "RVA ID" field.
+        rvaId = re.search(r"(\d{4})(?:[.-](\d+))?$", findings_data["id"])
+        if rvaId:
+            rID = f"RV{rvaId.group(1)}"
+            if rvaId.group(2) is not None:
+                rID += f".{rvaId.group(2)}"
+            findings_data["id"] = rID
+        else:
+            logging.warning(
+                "Skipping record. Unable to extract valid RVA ID from %s",
+                findings_data["id"],
+            )
+            raise ValueError("Unable to parse RVA id from finding object")
+        findings_data["Schema"] = V2_SCHEMA
+        return [
+            findings_data
+        ]  # return a list for consistent logging and results between validate_vX_findings methods,
+        # even though it only ever has length 0 or 1
+    except ValueError:
+        # we've already logged all the errors we can, so just return no valid results at this point
+        return []
+
+
+def extract_findings(findings_data: list, field_map_dict: dict):
+    """
+    Validate and return cleaned/processed finding.
+
+    Parameters
+    ----------
+    findings_data : list
+        The findings dictionary pulled from a findings JSON file, either as a list of dict objects (v1), or a lone dict object (v2)
+
+    field_map_dict: dict
+        The dictionary of replacement rules for field names in findings_data (used only in V1 style processing)
+
+    Returns
+    -------
+    list : A list of findings objects from findings_data that pass validation
+
+    """
+    if isinstance(findings_data, list):
+        valid_findings = validate_v1_findings(
+            findings_data, field_map_dict=field_map_dict
+        )  # processes a list of V1 objects ([])
+        findings_length = len(findings_data)
+
+    else:
+        # we're dealing with a lone object (V2-style), and handle it a little differently here
+        valid_findings = validate_v2_findings(
+            findings_data
+        )  # processes a hierarchical V2 object (obj->findings->[])
+        findings_length = 1
 
     logging.info(
         "%d/%d documents successfully processed.",
         len(valid_findings),
-        len(findings_data),
+        findings_length,
     )
 
     return valid_findings
@@ -305,12 +385,14 @@ def update_record(db: typing.Any, finding: dict):
     finding: dict
         The finding data to insert.
     """
-    if "RVA ID" not in finding:
-        raise ValueError("The passed finding has no RVA ID field.")
+    if "Schema" in finding and finding["Schema"] == V1_SCHEMA:
 
-    # if it has "NCATS ID", it is 'v1' record
-    if "NCATS ID" in finding and "Severity" in finding:
-        finding["Schema"] = "v1"
+        for required_field in ["RVA ID", "NCATS ID", "Severity"]:
+            if required_field not in finding:
+                raise ValueError(
+                    f"The passed finding is missing a required '{required_field}' field."
+                )
+
         db.findings.find_one_and_update(
             {
                 "RVA ID": finding["RVA ID"],
@@ -320,12 +402,17 @@ def update_record(db: typing.Any, finding: dict):
             {"$set": finding},
             upsert=True,
         )
+
     # 'v2' record has a findings collection and is one record per RVA ID
-    elif "findings" in finding:
-        finding["Schema"] = "v2"
+    elif "Schema" in finding and finding["Schema"] == V2_SCHEMA:
+        for required_field in ["findings", "id"]:
+            if required_field not in finding:
+                raise ValueError(
+                    f"The passed finding is missing a required '{required_field}' field."
+                )
         db.findings.find_one_and_update(
             {
-                "RVA ID": finding["RVA ID"],
+                "id": finding["id"],
             },
             {"$set": finding},
             upsert=True,
