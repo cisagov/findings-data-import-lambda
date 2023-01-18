@@ -312,19 +312,6 @@ def validate_v2_findings(findings_data: dict):
             logging.warning('Skipping record. Missing "id" or "findings" field.')
             raise ValueError("Missing id or findings field in v2 findings object")
 
-        # Get RVA ID in format DDDD([.-]D+) from the end of the "RVA ID" field.
-        rvaId = re.search(r"(\d{4})(?:[.-](\d+))?$", findings_data["id"])
-        if rvaId:
-            rID = f"RV{rvaId.group(1)}"
-            if rvaId.group(2) is not None:
-                rID += f".{rvaId.group(2)}"
-            findings_data["id"] = rID
-        else:
-            logging.warning(
-                "Skipping record. Unable to extract valid RVA ID from %s",
-                findings_data["id"],
-            )
-            raise ValueError("Unable to parse RVA id from finding object")
         findings_data["Schema"] = V2_SCHEMA
         return [
             findings_data
