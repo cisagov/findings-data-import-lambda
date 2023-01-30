@@ -22,8 +22,8 @@ script will remove that element from the record.
 
 ```json
 {
-    "field_to_replace": "value_to_replace_field_with",
-    "field_to_remove": ""
+  "field_to_replace": "value_to_replace_field_with",
+  "field_to_remove": ""
 }
 ```
 
