@@ -46,6 +46,17 @@ def handler(event, context) -> None:
     :param context: The context in which the function is called.
     :return: The result of the action.
     """
+    old_level = None
+
+    # Update the logging level if necessary
+    new_level = os.environ.get("log_level", "info").upper()
+    if not isinstance(logging.getLevelName(new_level), int):
+        logging.warning("Invalid log level %s passed. Using INFO instead.", new_level)
+        new_level = "INFO"
+    if logging.getLogger().getEffectiveLevel() != logging.getLevelName(new_level):
+        old_level = logging.getLogger().getEffectiveLevel()
+        logging.getLogger().setLevel(new_level)
+
     logging.debug("AWS Event was: %s", json.dumps(event))
 
     expected_event = "ObjectCreated:Put"
@@ -107,3 +118,6 @@ def handler(event, context) -> None:
     else:
         logging.warning("Unexpected eventName received: %s", record["eventName"])
         logging.warning("Full AWS event: %s", json.dumps(event))
+
+    if old_level is not None:
+        logging.getLogger().setLevel(old_level)
