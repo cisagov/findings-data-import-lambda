@@ -242,7 +242,6 @@ def validate_v1_findings(findings_data: list, field_map_dict: dict):
     valid_findings = []
     # Iterate through data and save each record to the database
     for index, finding in enumerate(findings_data):
-
         if not finding or not isinstance(finding, dict):
             logging.warning("Received an empty or invalid finding object, skipping.")
             continue
@@ -373,7 +372,6 @@ def update_record(db: typing.Any, finding: dict):
         The finding data to insert.
     """
     if "Schema" in finding and finding["Schema"] == V1_SCHEMA:
-
         for required_field in ["RVA ID", "NCATS ID", "Severity"]:
             if required_field not in finding:
                 raise ValueError(
