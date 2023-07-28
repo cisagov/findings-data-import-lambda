@@ -31,8 +31,9 @@ import os
 # cisagov Libraries
 from findings_data_import import import_data
 
+default_log_level = "INFO"
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(default_log_level)
 
 
 def handler(event, context) -> None:
